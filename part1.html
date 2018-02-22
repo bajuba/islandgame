@@ -190,7 +190,9 @@ function update() {
     if (game.input.activePointer.isDown){
         click = true;
     }
-        //lavaFlows.update();
+        lavaFlows.forEach(function(element){
+            element.update();
+        })
 
     
     
