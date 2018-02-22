@@ -32,15 +32,16 @@ LavaFlow = function (index, game){
     
     this.alive = true;
 
-    this.lava = game.add.sprite(x, y, 'enemy', 'lavaflow');
+    this.lava = game.add.sprite(x, y, 'lavaflow');
+    this.lava.animations.add('flow', [0,1,2], 6);
     
-    this.lava.name = index.toString();
+    //this.lava.name = index.toString();
 
 
 };
 
 LavaFlow.prototype.update = function(){
-    
+    this.lava.animations.play('flow');
 }   
 
 var game = new Phaser.Game(480, 480, Phaser.AUTO,'', { preload: preload, create: create, update: update });
@@ -69,6 +70,8 @@ var layer1;
 var platforms;
 var player;
 var cursors;
+var click = false;
+var lavaFlows = [];
 var mapArray = createArray(30,30);
     var debug;
     
@@ -147,8 +150,9 @@ function create() {
     game.add.sprite(240,224,'seaVolcano');
     game.add.sprite(224,240,'seaVolcano');
     game.add.sprite(240,240,'seaVolcano');
-    lavaflow = game.add.sprite(240,240,'lavaflow');
-    lavaflow.animations.add('flow', [0,1,2], 6);
+    
+    //lavaflow = game.add.sprite(240,240,'lavaflow');
+    //lavaflow.animations.add('flow', [0,1,2], 6);
     
     game.add.sprite(0,460,'eruptbar');
     fire = game.add.sprite(3,450,'fire');
@@ -178,11 +182,18 @@ function actionOnClick () {
 function update() {
     
     moveFire();
-    if (game.input.activePointer.isDown){
+    
+    if (game.input.activePointer.isUp && click){
+        click = false;
         erupt();
     }
+    if (game.input.activePointer.isDown){
+        click = true;
+    }
+        //lavaFlows.update();
+
     
-    lavaflow.animations.play('flow');
+    
     
     this.game.scale.pageAlignHorizontally = true;this.game.scale.pageAlignVertically = true;this.game.scale.refresh();
     //changeMap(15,15,"5");
@@ -238,11 +249,11 @@ function drawMap(){
 }
 function erupt(){
     if(fire.x >= 3 && fire.x <= 130){
-        alert("1 volcano")
+        lavaFlows.push(new LavaFlow(0,game)) ;
     }else if(fire.x >= 131 && fire.x <= 320){
-        alert("2 volcanoes")
+        lavaFlows.push(new LavaFlow(0,game),new LavaFlow(0,game)) ;
     }else if(fire.x >= 321){
-        alert("3 volcanoes")
+        lavaFlows.push(new LavaFlow(0,game),new LavaFlow(0,game),new LavaFlow(0,game)) ;
     }
 }
 function moveFire(){
