@@ -24,26 +24,41 @@
 <script type="text/javascript">
 
 LavaFlow = function (index, game){
-    
-    var x = game.world.randomX;
-    var y = game.world.randomY;
-
+    var start = game.rnd.integerInRange(1, 4);
+    var x, y;
+    if (start == 1){x=224;y=224;}
+    else if (start == 2){x=240;y=224;}
+    else if (start == 3){x=224;y=240;}
+    else if (start == 4){x=240;y=240;}
+    this.index = index;
     this.game = game;
     
     this.alive = true;
 
     this.lava = game.add.sprite(x, y, 'lavaflow');
     this.lava.animations.add('flow', [0,1,2], 6);
-    
-    //this.lava.name = index.toString();
-
+    this.update = function(){
+        
+        this.lava.animations.play('flow');
+    }
+    this.checkLava = function(){
+        //Move lava in random direction
+        var dir = game.rnd.integerInRange(1,4);
+        if (dir == 1){var tween = this.game.add.tween(this.lava).to({x: x -this.lava.width},1000, Phaser.Easing.Linear.None, true);} //left
+        else if (dir == 2){var tween = this.game.add.tween(this.lava).to({y: y -this.lava.height},1000, Phaser.Easing.Linear.None, true);} //up
+        else if (dir == 3){var tween = this.game.add.tween(this.lava).to({x: x + this.lava.width},1000, Phaser.Easing.Linear.None, true);} //right
+        else if (dir == 4){var tween = this.game.add.tween(this.lava).to({y: y + this.lava.height},1000, Phaser.Easing.Linear.None, true);} //down
+        
+        tween.onComplete.add(onComplete, this)
+    }
 
 };
-
-LavaFlow.prototype.update = function(){
-    this.lava.animations.play('flow');
-}   
-
+function onComplete(){
+    //Move complete
+    lavaFlows.splice(this.index, 1);
+    this.lava.destroy();
+    lavaSpawned = false;
+}
 var game = new Phaser.Game(480, 480, Phaser.AUTO,'', { preload: preload, create: create, update: update });
     
     
@@ -72,6 +87,8 @@ var player;
 var cursors;
 var click = false;
 var lavaFlows = [];
+var lavaIndex = 0; //keep track of lava in array
+var lavaSpawned = false; //register only one click at a time
 var mapArray = createArray(30,30);
     var debug;
     
@@ -156,7 +173,6 @@ function create() {
     
     game.add.sprite(0,460,'eruptbar');
     fire = game.add.sprite(3,450,'fire');
-    
     
     
     game.add.tween(debug).to( { y: 16 }, 1000, Phaser.Easing.Out, true);
@@ -250,13 +266,34 @@ function drawMap(){
     
 }
 function erupt(){
+    if (!lavaSpawned){
     if(fire.x >= 3 && fire.x <= 130){
-        lavaFlows.push(new LavaFlow(0,game)) ;
+        //alert(lavaFlows.length+" " + lavaIndex);
+        lavaFlows[lavaIndex] = new LavaFlow(lavaIndex,game) ;
+        lavaFlows[lavaIndex].checkLava();
+        lavaIndex +=1;
     }else if(fire.x >= 131 && fire.x <= 320){
-        lavaFlows.push(new LavaFlow(0,game),new LavaFlow(0,game)) ;
+        lavaFlows[lavaIndex] = new LavaFlow(lavaIndex,game) ;
+        lavaFlows[lavaIndex].checkLava();
+        lavaIndex +=1;
+        lavaFlows[lavaIndex] = new LavaFlow(lavaIndex,game) ;
+        lavaFlows[lavaIndex].checkLava();
+        lavaIndex +=1;
     }else if(fire.x >= 321){
-        lavaFlows.push(new LavaFlow(0,game),new LavaFlow(0,game),new LavaFlow(0,game)) ;
+        lavaFlows[lavaIndex] = new LavaFlow(lavaIndex,game) ;
+        lavaFlows[lavaIndex].checkLava();
+        lavaIndex +=1;
+        lavaFlows[lavaIndex] = new LavaFlow(lavaIndex,game) ;
+        lavaFlows[lavaIndex].checkLava();
+        lavaIndex +=1;
+        lavaFlows[lavaIndex] = new LavaFlow(lavaIndex,game) ;
+        lavaFlows[lavaIndex].checkLava();
+        lavaIndex +=1;
     }
+        
+    
+    }
+    lavaSpawned = true;
 }
 function moveFire(){
     if (fire.x == 448)
