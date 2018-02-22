@@ -1,0 +1,126 @@
+{ "height":10,
+ "layers":[
+         {
+         "data":[0, 29, 0, 0, 0, 0, 31, 0, 0, 0, 0, 33, 13, 13, 13, 13, 35, 0, 0, 0, 0, 17, 49, 50, 57, 58, 17, 0, 0, 0, 0, 17, 53, 54, 61, 62, 17, 0, 0, 0, 0, 2, 38, 0, 0, 1, 43, 0, 0, 0, 0, 0, 24, 0, 0, 24, 0, 0, 0, 0, 0, 0, 28, 0, 0, 28, 0, 0, 0, 0, 0, 0, 17, 0, 0, 17, 0, 0, 0, 0, 0, 0, 2, 13, 13, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+         "height":10,
+         "name":"walls",
+         "opacity":1,
+         "type":"tilelayer",
+         "visible":true,
+         "width":10,
+         "x":0,
+         "y":0
+        }, 
+        {
+         "data":[65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65],
+         "height":10,
+         "name":"grass",
+         "opacity":1,
+         "type":"tilelayer",
+         "visible":true,
+         "width":10,
+         "x":0,
+         "y":0
+        },        
+        {
+         "data":[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 51, 52, 59, 60, 0, 0, 0, 0, 0, 0, 55, 56, 63, 64, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+         "height":10,
+         "name":"open",
+         "opacity":1,
+         "type":"tilelayer",
+         "visible":false,
+         "width":10,
+         "x":0,
+         "y":0
+        }],
+ "orientation":"orthogonal",
+ "properties":
+    {
+
+    },
+ "tileheight":144,
+ "tilesets":[
+        {
+         "firstgid":1,
+         "image":"walls.png",
+         "imageheight":720,
+         "imagewidth":512,
+         "margin":0,
+         "name":"walls",
+         "properties":
+            {
+
+            },
+         "spacing":0,
+         "tileheight":144,
+         "tilewidth":128
+        }, 
+        {
+         "firstgid":21,
+         "image":"towers.png",
+         "imageheight":576,
+         "imagewidth":512,
+         "margin":0,
+         "name":"towers",
+         "properties":
+            {
+
+            },
+         "spacing":0,
+         "terrains":[
+                {
+                 "name":"New Terrain",
+                 "tile":-1
+                }],
+         "tileheight":144,
+         "tilewidth":128
+        }, 
+        {
+         "firstgid":37,
+         "image":"brokenWall.png",
+         "imageheight":432,
+         "imagewidth":512,
+         "margin":0,
+         "name":"broken",
+         "properties":
+            {
+
+            },
+         "spacing":0,
+         "tileheight":144,
+         "tilewidth":128
+        }, 
+        {
+         "firstgid":49,
+         "image":"house.png",
+         "imageheight":576,
+         "imagewidth":512,
+         "margin":0,
+         "name":"house",
+         "properties":
+            {
+
+            },
+         "spacing":0,
+         "tileheight":144,
+         "tilewidth":128
+        }, 
+        {
+         "firstgid":65,
+         "image":"..\/enviroment\/grass01.png",
+         "imageheight":144,
+         "imagewidth":128,
+         "margin":0,
+         "name":"grass",
+         "properties":
+            {
+
+            },
+         "spacing":0,
+         "tileheight":144,
+         "tilewidth":128
+        }],
+ "tilewidth":128,
+ "version":1,
+ "width":10
+}

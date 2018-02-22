@@ -1,0 +1,269 @@
+<!doctype html> 
+<html lang="en"> 
+<head> 
+	<meta charset="UTF-8" />
+	<title>The Island</title>
+    <script src="//cdn.jsdelivr.net/phaser/2.2.2/phaser.min.js"></script>
+    <style type="text/css">
+        body {
+            margin: 0;
+            background-image: url(assets/starrysky.png);
+            background-size: cover;
+            
+        }
+        p{
+            color:white;
+            font-family: arial;
+            text-align:center;
+        }
+       
+    </style>
+</head>
+<body>
+    <p>Press F for Fullscreen.</p>
+<script type="text/javascript">
+
+LavaFlow = function (index, game){
+    
+    var x = game.world.randomX;
+    var y = game.world.randomY;
+
+    this.game = game;
+    
+    this.alive = true;
+
+    this.lava = game.add.sprite(x, y, 'enemy', 'lavaflow');
+    
+    this.lava.name = index.toString();
+
+
+};
+
+LavaFlow.prototype.update = function(){
+    
+}   
+
+var game = new Phaser.Game(480, 480, Phaser.AUTO,'', { preload: preload, create: create, update: update });
+    
+    
+
+var text;
+var counter = 0;
+var fsButton;
+function preload() {
+    
+    game.load.image('sky', 'assets/sky.png');
+    game.load.image('ground', 'assets/platform.png');
+    game.load.image('star', 'assets/star.png');
+    game.load.spritesheet('dude', 'assets/dude.png', 32, 48);
+    game.load.image('tiles','assets/island.png');
+    game.load.image('debug','assets/debug.png');
+    game.load.image('seaVolcano','assets/volcano.png');
+    game.load.spritesheet('lavaflow','assets/lavaflow.png',16,16);
+    game.load.image('eruptbar','assets/eruptBar.png');
+    fire = game.load.image('fire','assets/fire.png');
+}
+
+var islandMap;
+var layer1;
+var platforms;
+var player;
+var cursors;
+var mapArray = createArray(30,30);
+    var debug;
+    
+function create() {
+    
+   
+    /******************8
+   Full Screen Options
+   ********************/
+    //options for fullscreen
+    // Stretch to fill
+    //game.scale.fullScreenScaleMode = Phaser.ScaleManager.EXACT_FIT;
+
+    // Keep original size
+    // game.scale.fullScreenScaleMode = Phaser.ScaleManager.NO_SCALE;
+
+    // Maintain aspect ratio
+     game.scale.fullScreenScaleMode = Phaser.ScaleManager.SHOW_ALL;
+    
+    //fullscreen hotkey
+    fullscreenHotkey = game.input.keyboard.addKey(Phaser.Keyboard.F);
+    fullscreenHotkey.onDown.add(gofull, this);
+    
+    /******************8
+   Setting up the TileMap
+   ********************/
+    
+    //  Create some map data dynamically
+    //  Map size is 30x30 tiles
+    var data = '';
+    
+    for (var y = 0; y < 30; y++)
+    {
+        for (var x = 0; x < 30; x++)
+        {
+            data += "0";
+            mapArray[x][y] = "0";
+            if (x < 29)
+            {
+                data += ',';
+            }
+        }
+
+        if (y < 29)
+        {
+            data += "\n";
+        }
+    }
+    
+    //  Add data to the cache
+    game.cache.addTilemap('dynamicMap', null, data, Phaser.Tilemap.CSV);
+    
+    //  Create our map (the 16x16 is the tile size)
+    map = game.add.tilemap('dynamicMap', 16, 16);
+    
+    //  'tiles' = cache image key, 16x16 = tile size
+    map.addTilesetImage('tiles', 'tiles', 16, 16);
+    
+    //  0 is important
+    layer = map.createLayer(0);
+    
+    //resize the world
+    layer.resizeWorld();
+  
+    /******************8
+   Physics
+   ********************/
+    //  We're going to be using physics, so enable the Arcade Physics system
+    game.physics.startSystem(Phaser.Physics.ARCADE);
+
+    debug = game.add.sprite(0,0,'debug');
+    
+    debug2 = game.add.sprite(0,0,'debug');
+    
+    game.add.sprite(224,224,'seaVolcano');
+    game.add.sprite(240,224,'seaVolcano');
+    game.add.sprite(224,240,'seaVolcano');
+    game.add.sprite(240,240,'seaVolcano');
+    lavaflow = game.add.sprite(240,240,'lavaflow');
+    lavaflow.animations.add('flow', [0,1,2], 6);
+    
+    game.add.sprite(0,460,'eruptbar');
+    game.add.sprite(3,450,'fire');
+    
+    
+    
+    game.add.tween(debug).to( { y: 16 }, 1000, Phaser.Easing.Out, true);
+    game.add.tween(debug2).to( { x: 16 }, 1000, Phaser.Easing.Out, true);
+    //alert(debug.x);
+    text = game.add.text(250, 16, '', { fill: '#ffffff' });
+}
+    
+
+
+function gofull() {
+
+    game.scale.startFullScreen();
+
+}
+
+function actionOnClick () {
+
+    sprite.tint = Math.random() * 0xFFFFFF;
+
+}
+
+function update() {
+    
+    moveFire();
+    if (game.input.activePointer.isDown){
+        erupt();
+    }
+    
+    lavaflow.animations.play('flow');
+    
+    this.game.scale.pageAlignHorizontally = true;this.game.scale.pageAlignVertically = true;this.game.scale.refresh();
+    //changeMap(15,15,"5");
+    //drawMap();
+    
+    
+}
+
+function listener () {
+
+    counter++;
+    text.text = "You clicked " + counter + " times!";
+
+}
+    
+/*********************************************************
+borrowed code from stackoverflow for creating n-dimension array
+**********************************************************/
+function createArray(length) {
+    var arr = new Array(length || 0),
+        i = length;
+
+    if (arguments.length > 1) {
+        var args = Array.prototype.slice.call(arguments, 1);
+        while(i--) arr[length-1 - i] = createArray.apply(this, args);
+    }
+
+    return arr;
+}
+/*********************************************************
+drawing the map from an array to the data
+**********************************************************/
+function drawMap(){
+    var data;
+    for (var y = 0; y < 30; y++)
+    {
+        for (var x = 0; x < 30; x++)
+        {
+            data += mapArray[x][y];
+            if (x < 29)
+            {
+                data += ',';
+            }
+        }
+
+        if (y < 29)
+        {
+            data += "\n";
+        }
+    }
+    
+    
+}
+function erupt(){
+    if(fire.x >= 3 && fire.x <= 130){
+        alert("1 volcano")
+    }else if(fire.x >= 131 && fire.x <= 320){
+        alert("2 volcanoes")
+    }else if(fire.x >= 321){
+        alert("3 volcanoes")
+    }
+}
+function moveFire(){
+    if (fire.x == 448)
+        {
+            game.add.tween(fire).to({x: 3}, 1000 , Phaser.Easing.Out, true);
+
+        }
+    else if (fire.x == 3)
+        {
+            game.add.tween(fire).to({x: 448}, 1000 , Phaser.Easing.Out, true);
+
+        }
+}
+/*********************************************************
+Move a sprite down one tile
+**********************************************************/
+function moveSpriteDown(sprite){
+    tween.to(sprite)
+}
+</script>
+
+</body>
+</html>
