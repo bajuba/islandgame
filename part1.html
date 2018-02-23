@@ -32,6 +32,7 @@ LavaFlow = function (index, game){
     else if (start == 4){x=240;y=240;}
     this.index = index;
     this.game = game;
+    this.last = 0;
     
     this.alive = true;
 
@@ -43,21 +44,40 @@ LavaFlow = function (index, game){
     }
     this.checkLava = function(){
         //Move lava in random direction
-        var dir = game.rnd.integerInRange(1,4);
-        if (dir == 1){var tween = this.game.add.tween(this.lava).to({x: x -this.lava.width},1000, Phaser.Easing.Linear.None, true);} //left
-        else if (dir == 2){var tween = this.game.add.tween(this.lava).to({y: y -this.lava.height},1000, Phaser.Easing.Linear.None, true);} //up
-        else if (dir == 3){var tween = this.game.add.tween(this.lava).to({x: x + this.lava.width},1000, Phaser.Easing.Linear.None, true);} //right
-        else if (dir == 4){var tween = this.game.add.tween(this.lava).to({y: y + this.lava.height},1000, Phaser.Easing.Linear.None, true);} //down
         
-        tween.onComplete.add(onComplete, this)
+        var x = this.lava.x;
+        var y = this.lava.y;
+        var dir = game.rnd.integerInRange(1,4);
+        if (dir == 1 && this.last != 3){
+            x -= 16;
+            this.last = dir;} //left
+        else if (dir == 2 && this.last != 4){
+            y -= 16;
+            this.last = dir;} //up
+        else if (dir == 3 && this.last != 1){
+            x += 16;
+            this.last = dir;} //right
+        else if (dir == 4 && this.last != 2){
+            y += 16;
+            this.last = dir;} //down
+        var tween = this.game.add.tween(this.lava).to({x: x, y: y},1000, Phaser.Easing.Linear.None, true);
+        tween.onComplete.add(onComplete, this);
     }
 
 };
 function onComplete(){
-    //Move complete
-    lavaFlows.splice(this.index, 1);
-    this.lava.destroy();
-    lavaSpawned = false;
+    //Move complete. Add logic to determine what tile is under lava
+    var tileX = this.lava.x /16;
+    var tileY = this.lava.y /16;
+    if(mapArray[tileX][tileY] == 0){ //no ground
+        game.add.sprite(this.lava.x,this.lava.y,'ground');
+        mapArray[tileX][tileY] = 1
+        lavaFlows.splice(this.index, 1);
+        this.lava.destroy();
+        lavaSpawned = false;
+    } else{this.checkLava();}
+    
+    
 }
 var game = new Phaser.Game(480, 480, Phaser.AUTO,'', { preload: preload, create: create, update: update });
     
@@ -69,7 +89,7 @@ var fsButton;
 function preload() {
     
     game.load.image('sky', 'assets/sky.png');
-    game.load.image('ground', 'assets/platform.png');
+    game.load.image('ground', 'assets/grass1.png');
     game.load.image('star', 'assets/star.png');
     game.load.spritesheet('dude', 'assets/dude.png', 32, 48);
     game.load.image('tiles','assets/island.png');
@@ -179,6 +199,10 @@ function create() {
     game.add.tween(debug2).to( { x: 16 }, 1000, Phaser.Easing.Out, true);
     //alert(debug.x);
     text = game.add.text(250, 16, '', { fill: '#ffffff' });
+    mapArray[14][14] = 2;
+    mapArray[15][14] = 2;
+    mapArray[14][15] = 2;
+    mapArray[15][15] = 2;
 }
     
 
