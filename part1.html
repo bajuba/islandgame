@@ -89,7 +89,14 @@ function onComplete(){
     //Move complete. Add logic to determine what tile is under lava
     var tileX = this.lava.x /16;
     var tileY = this.lava.y /16;
+    //this.lava.tint = (1000 - this.speed) * 0xffffff;
+    if (this.speed >= 200){this.lava.tint = 0x808080;}
+    else if(this.speed >= 125){this.lava.tint = 0xA9A9A9;}
+    else if (this.speed >= 75){this.lava.tint = 0xBEBEBE;}
+    else if (this.speed > 0){this.lava.tint = 0xF5F5F5;}
+    
     if(mapArray[tileX][tileY] == 0){ //no ground
+        
         game.add.sprite(this.lava.x,this.lava.y,'ground');
         mapArray[tileX][tileY] = 1
         lavaFlows.splice(this.index, 1);
@@ -99,7 +106,7 @@ function onComplete(){
             lavaSpawned = false;
         }
         
-    } else{this.checkLava();this.speed+= 50;}
+    } else{this.checkLava();this.speed+= 75;}
     
     
 }
