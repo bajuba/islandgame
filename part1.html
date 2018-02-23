@@ -23,16 +23,17 @@
     <p>banana Press F for Fullscreen.</p>
 <script type="text/javascript">
 
-LavaFlow = function (index, game){
-    var start = game.rnd.integerInRange(1, 4);
+LavaFlow = function (index, start, game){
     var x, y;
+    
+    this.index = index;
+    this.game = game;
+    this.last = 0;
+    this.start = start;
     if (start == 1){x=224;y=224;}
     else if (start == 2){x=240;y=224;}
     else if (start == 3){x=224;y=240;}
     else if (start == 4){x=240;y=240;}
-    this.index = index;
-    this.game = game;
-    this.last = 0;
     
     this.alive = true;
 
@@ -47,19 +48,37 @@ LavaFlow = function (index, game){
         
         var x = this.lava.x;
         var y = this.lava.y;
-        var dir = game.rnd.integerInRange(1,4);
-        if (dir == 1 && this.last != 3){
+        
+        var dir;
+        if (this.start == 1){ //Top Left
+            dir = game.rnd.integerInRange(1,2);
+            if (dir == 1){x -= 16;} //Move Left
+            else if(dir == 2){y -= 16} //Move Up
+        }else if (this.start == 2){ //Top Right
+            dir = game.rnd.integerInRange(1,2);
+            if (dir == 1){x += 16;} //Move Right
+            else if(dir == 2){y -= 16} //Move Up
+        }else if (this.start == 3){ //Bottom Left
+            dir = game.rnd.integerInRange(1,2);
+            if (dir == 1){x -= 16;} //Move Left
+            else if(dir == 2){y += 16} //Move Down
+        }else if (this.start == 4){ //Bottom Right
+            dir = game.rnd.integerInRange(1,2);
+            if (dir == 1){x += 16;} //Move Right
+            else if(dir == 2){y += 16} //Move Down
+        }
+        /*if (dir == 1 && this.last != 3 && (this.start == 1 || this.start == 3)){
             x -= 16;
             this.last = dir;} //left
-        else if (dir == 2 && this.last != 4){
+        else if (dir == 2 && this.last != 4 && (this.start == 1 || this.start == 2)){
             y -= 16;
             this.last = dir;} //up
-        else if (dir == 3 && this.last != 1){
+        else if (dir == 3 && this.last != 1 && (this.start == 2 || this.start == 4)){
             x += 16;
             this.last = dir;} //right
-        else if (dir == 4 && this.last != 2){
+        else if (dir == 4 && this.last != 2 && (this.start == 3 || this.start == 4)){
             y += 16;
-            this.last = dir;} //down
+            this.last = dir;} //down*/
         var tween = this.game.add.tween(this.lava).to({x: x, y: y},1000, Phaser.Easing.Linear.None, true);
         tween.onComplete.add(onComplete, this);
     }
@@ -74,7 +93,11 @@ function onComplete(){
         mapArray[tileX][tileY] = 1
         lavaFlows.splice(this.index, 1);
         this.lava.destroy();
-        lavaSpawned = false;
+        lavaCount -= 1;
+        if (lavaCount == 0){
+            lavaSpawned = false;
+        }
+        
     } else{this.checkLava();}
     
     
@@ -107,6 +130,7 @@ var player;
 var cursors;
 var click = false;
 var lavaFlows = [];
+var lavaCount;
 var lavaIndex = 0; //keep track of lava in array
 var lavaSpawned = false; //register only one click at a time
 var mapArray = createArray(30,30);
@@ -290,27 +314,31 @@ function drawMap(){
     
 }
 function erupt(){
+    var picked = [3];
     if (!lavaSpawned){
     if(fire.x >= 3 && fire.x <= 130){
         //alert(lavaFlows.length+" " + lavaIndex);
-        lavaFlows[lavaIndex] = new LavaFlow(lavaIndex,game) ;
+        lavaCount = 1;
+        lavaFlows[lavaIndex] = new LavaFlow(lavaIndex,picked[0]=lavaStart(picked),game) ;
         lavaFlows[lavaIndex].checkLava();
         lavaIndex +=1;
     }else if(fire.x >= 131 && fire.x <= 320){
-        lavaFlows[lavaIndex] = new LavaFlow(lavaIndex,game) ;
+        lavaCount = 2;
+        lavaFlows[lavaIndex] = new LavaFlow(lavaIndex,picked[0]=lavaStart(picked),game) ;
         lavaFlows[lavaIndex].checkLava();
         lavaIndex +=1;
-        lavaFlows[lavaIndex] = new LavaFlow(lavaIndex,game) ;
+        lavaFlows[lavaIndex] = new LavaFlow(lavaIndex,picked[1]=lavaStart(picked),game) ;
         lavaFlows[lavaIndex].checkLava();
         lavaIndex +=1;
     }else if(fire.x >= 321){
-        lavaFlows[lavaIndex] = new LavaFlow(lavaIndex,game) ;
+        lavaCount = 3;
+        lavaFlows[lavaIndex] = new LavaFlow(lavaIndex,picked[0]=lavaStart(picked),game) ;
         lavaFlows[lavaIndex].checkLava();
         lavaIndex +=1;
-        lavaFlows[lavaIndex] = new LavaFlow(lavaIndex,game) ;
+        lavaFlows[lavaIndex] = new LavaFlow(lavaIndex,picked[1]=lavaStart(picked),game) ;
         lavaFlows[lavaIndex].checkLava();
         lavaIndex +=1;
-        lavaFlows[lavaIndex] = new LavaFlow(lavaIndex,game) ;
+        lavaFlows[lavaIndex] = new LavaFlow(lavaIndex,picked[2]=lavaStart(picked),game) ;
         lavaFlows[lavaIndex].checkLava();
         lavaIndex +=1;
     }
@@ -330,6 +358,19 @@ function moveFire(){
             game.add.tween(fire).to({x: 448}, 1000 , Phaser.Easing.Out, true);
 
         }
+}
+function lavaStart(lavas){
+    var picked;
+    var start;
+    do{
+        picked = false;
+        start = game.rnd.integerInRange(1, 4);
+        lavas.forEach(function(element){
+            if(element == start){picked = true;}
+        }) 
+    } while(picked);
+    
+    return start;
 }
 /*********************************************************
 Move a sprite down one tile
