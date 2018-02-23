@@ -22,7 +22,37 @@
 <body>
     <p>banana Press F for Fullscreen.</p>
 <script type="text/javascript">
-
+/*******************
+**Global Variables**
+*******************/
+var game = new Phaser.Game(480, 480, Phaser.AUTO,'', { preload: preload, create: create, update: update });
+var SCALE = 16;
+var gameMode = 0;
+var timer;
+var text;
+var NARRATION1 = "Welcome to the middle of nowhere! Once upon a time, some shitty volcanoes erupted and created an island."
+var narration1 = "";
+var speechBubble;
+var textCount = 0;
+var narrationCount = 0;
+var counter = 0;
+var eruptBar;
+var volcanoes = [];
+var fsButton;
+var islandMap;
+var layer1;
+var platforms;
+var player;
+var cursors;
+var click = false;
+var lavaFlows = [];
+var lavaCount; //Used for preventing multiple eruptions at once
+var lavaIndex = 0; //keep track of lava in array
+var lavaSpawned = false; //register only one click at a time
+var mapArray = createArray(30,30);
+var debug;
+var islandSize = 0;
+var narrator;
 LavaFlow = function (index, start, game){
     var x, y;
     
@@ -31,17 +61,31 @@ LavaFlow = function (index, start, game){
     this.last = 0;
     this.start = start;
     this.speed = 0;
-    if (start == 1){x=224;y=224;}
-    else if (start == 2){x=240;y=224;}
-    else if (start == 3){x=224;y=240;}
-    else if (start == 4){x=240;y=240;}
-    
+    if (start == 1){x=224;y=224;
+        if(mapArray[14][14] == 2){
+            mapArray[14][14] = 3;
+            volcanoes[0] = game.add.sprite(x, y, 'landVolcano');}}
+    else if (start == 2){x=240;y=224;
+        if(mapArray[15][14] == 2){
+            mapArray[15][14] = 3;
+            volcanoes[1] = game.add.sprite(x, y, 'landVolcano');}}
+    else if (start == 3){x=224;y=240;
+        if(mapArray[14][15] == 2){
+            mapArray[14][15] = 3;
+            volcanoes[2] = game.add.sprite(x, y, 'landVolcano');}}
+    else if (start == 4){x=240;y=240;
+        if(mapArray[15][15] == 2){
+            mapArray[15][15] = 3;
+            volcanoes[3] = game.add.sprite(x, y, 'landVolcano');}}
+    mapArray[14][14] = 2;
+    mapArray[15][14] = 2;
+    mapArray[14][15] = 2;
+    mapArray[15][15] = 2;
     this.alive = true;
 
     this.lava = game.add.sprite(x, y, 'lavaflow');
     this.lava.animations.add('flow', [0,1,2], 6);
     this.update = function(){
-        
         this.lava.animations.play('flow');
     }
     this.checkLava = function(){
@@ -53,70 +97,57 @@ LavaFlow = function (index, start, game){
         var dir;
         if (this.start == 1){ //Top Left
             dir = game.rnd.integerInRange(1,2);
-            if (dir == 1){x -= 16;} //Move Left
-            else if(dir == 2){y -= 16} //Move Up
+            if (dir == 1){x -= SCALE;} //Move Left
+            else if(dir == 2){y -= SCALE} //Move Up
         }else if (this.start == 2){ //Top Right
             dir = game.rnd.integerInRange(1,2);
-            if (dir == 1){x += 16;} //Move Right
-            else if(dir == 2){y -= 16} //Move Up
+            if (dir == 1){x += SCALE;} //Move Right
+            else if(dir == 2){y -= SCALE} //Move Up
         }else if (this.start == 3){ //Bottom Left
             dir = game.rnd.integerInRange(1,2);
-            if (dir == 1){x -= 16;} //Move Left
-            else if(dir == 2){y += 16} //Move Down
+            if (dir == 1){x -= SCALE;} //Move Left
+            else if(dir == 2){y += SCALE} //Move Down
         }else if (this.start == 4){ //Bottom Right
             dir = game.rnd.integerInRange(1,2);
-            if (dir == 1){x += 16;} //Move Right
-            else if(dir == 2){y += 16} //Move Down
+            if (dir == 1){x += SCALE;} //Move Right
+            else if(dir == 2){y += SCALE} //Move Down
         }
-        /*if (dir == 1 && this.last != 3 && (this.start == 1 || this.start == 3)){
-            x -= 16;
-            this.last = dir;} //left
-        else if (dir == 2 && this.last != 4 && (this.start == 1 || this.start == 2)){
-            y -= 16;
-            this.last = dir;} //up
-        else if (dir == 3 && this.last != 1 && (this.start == 2 || this.start == 4)){
-            x += 16;
-            this.last = dir;} //right
-        else if (dir == 4 && this.last != 2 && (this.start == 3 || this.start == 4)){
-            y += 16;
-            this.last = dir;} //down*/
+        
         var tween = this.game.add.tween(this.lava).to({x: x, y: y},500+this.speed, Phaser.Easing.Linear.None, true);
-        tween.onComplete.add(onComplete, this);
+        tween.onComplete.add(this.move, this);
+    }
+    this.move = function(){
+        //Move complete. Add logic to determine what tile is under lava
+        var tileX = this.lava.x /16;
+        var tileY = this.lava.y /16;
+        //this.lava.tint = (1000 - this.speed) * 0xffffff;
+        if (this.speed >= 200){this.lava.tint = 0x808080;}
+        else if(this.speed >= 125){this.lava.tint = 0xA9A9A9;}
+        else if (this.speed >= 75){this.lava.tint = 0xBEBEBE;}
+        else if (this.speed > 0){this.lava.tint = 0xF5F5F5;}
+    
+        if(mapArray[tileX][tileY] == 0){ //no ground
+        
+            game.add.sprite(this.lava.x,this.lava.y,'ground');
+            mapArray[tileX][tileY] = 1
+            islandSize +=1;
+            lavaFlows.splice(this.index, 1);
+            this.lava.destroy();
+            lavaCount -= 1;
+            if (lavaCount == 0){
+                lavaSpawned = false;
+            }
+        
+        } else{this.checkLava();this.speed+= 75;}
     }
 
 };
-function onComplete(){
-    //Move complete. Add logic to determine what tile is under lava
-    var tileX = this.lava.x /16;
-    var tileY = this.lava.y /16;
-    //this.lava.tint = (1000 - this.speed) * 0xffffff;
-    if (this.speed >= 200){this.lava.tint = 0x808080;}
-    else if(this.speed >= 125){this.lava.tint = 0xA9A9A9;}
-    else if (this.speed >= 75){this.lava.tint = 0xBEBEBE;}
-    else if (this.speed > 0){this.lava.tint = 0xF5F5F5;}
-    
-    if(mapArray[tileX][tileY] == 0){ //no ground
-        
-        game.add.sprite(this.lava.x,this.lava.y,'ground');
-        mapArray[tileX][tileY] = 1
-        lavaFlows.splice(this.index, 1);
-        this.lava.destroy();
-        lavaCount -= 1;
-        if (lavaCount == 0){
-            lavaSpawned = false;
-        }
-        
-    } else{this.checkLava();this.speed+= 75;}
-    
-    
-}
-var game = new Phaser.Game(480, 480, Phaser.AUTO,'', { preload: preload, create: create, update: update });
+
+
     
     
 
-var text;
-var counter = 0;
-var fsButton;
+
 function preload() {
     
     game.load.image('sky', 'assets/sky.png');
@@ -126,23 +157,15 @@ function preload() {
     game.load.image('tiles','assets/island.png');
     game.load.image('debug','assets/debug.png');
     game.load.image('seaVolcano','assets/volcano.png');
+    game.load.image('landVolcano','assets/volcanograss.png');
     game.load.spritesheet('lavaflow','assets/lavaflow.png',16,16);
     game.load.image('eruptbar','assets/eruptBar.png');
     game.load.image('fire','assets/fire.png');
+    game.load.image('narrator','assets/oldman.png');
+    game.load.image('speech','assets/speechbubble.png');
 }
 
-var islandMap;
-var layer1;
-var platforms;
-var player;
-var cursors;
-var click = false;
-var lavaFlows = [];
-var lavaCount;
-var lavaIndex = 0; //keep track of lava in array
-var lavaSpawned = false; //register only one click at a time
-var mapArray = createArray(30,30);
-    var debug;
+
     
 function create() {
     
@@ -194,10 +217,10 @@ function create() {
     game.cache.addTilemap('dynamicMap', null, data, Phaser.Tilemap.CSV);
     
     //  Create our map (the 16x16 is the tile size)
-    map = game.add.tilemap('dynamicMap', 16, 16);
+    map = game.add.tilemap('dynamicMap', SCALE, SCALE);
     
     //  'tiles' = cache image key, 16x16 = tile size
-    map.addTilesetImage('tiles', 'tiles', 16, 16);
+    map.addTilesetImage('tiles', 'tiles', SCALE, SCALE);
     
     //  0 is important
     layer = map.createLayer(0);
@@ -211,33 +234,69 @@ function create() {
     //  We're going to be using physics, so enable the Arcade Physics system
     game.physics.startSystem(Phaser.Physics.ARCADE);
 
-    debug = game.add.sprite(0,0,'debug');
-    
-    debug2 = game.add.sprite(0,0,'debug');
-    
-    game.add.sprite(224,224,'seaVolcano');
-    game.add.sprite(240,224,'seaVolcano');
-    game.add.sprite(224,240,'seaVolcano');
-    game.add.sprite(240,240,'seaVolcano');
-    
-    //lavaflow = game.add.sprite(240,240,'lavaflow');
-    //lavaflow.animations.add('flow', [0,1,2], 6);
-    
-    game.add.sprite(0,460,'eruptbar');
-    fire = game.add.sprite(3,450,'fire');
     
     
-    game.add.tween(debug).to( { y: 16 }, 1000, Phaser.Easing.Out, true);
-    game.add.tween(debug2).to( { x: 16 }, 1000, Phaser.Easing.Out, true);
-    //alert(debug.x);
-    text = game.add.text(250, 16, '', { fill: '#ffffff' });
+    timer = game.time.create(false);
+    timer.loop(50, updateText, this);
+    //text = game.add.text(250, 16, '', { fill: '#ffffff' });
+    
+    //Set Volcano Tiles in Array
     mapArray[14][14] = 2;
     mapArray[15][14] = 2;
     mapArray[14][15] = 2;
     mapArray[15][15] = 2;
+    intro();
 }
+function intro(){
+    speechBubble = game.add.sprite(5,50,'speech');
+    speechBubble.scale.setTo(.5,.25);
+    narrator = game.add.sprite(360,280,'narrator');
+    narrator.scale.setTo(.25,.25);
+    text = game.add.text(40,80,"",{ font: "25px Arial", fill: '#000000', wordWrap: true, wordWrapWidth: 400 });
+    timer.start();
+}
+function updateText(signal){
+    if(!(narration1 == NARRATION1)){narration1 = narration1 + NARRATION1.substr(textCount,1);textCount += 1;}
+    if(narration1 == NARRATION1){
+        //Done with text
+        if (signal == 1 && narrationCount == 0){
+            NARRATION1 = "Well... Do it, fucker!";
+            narration1 = "";
+            textCount = 0;
+            narrationCount = 1;
+        }else if (narrationCount == 1){narrationCount = 2;}
+        if(signal == 1 && narrationCount == 2){
+            timer.destroy();
+            narrator.destroy();
+            speechBubble.destroy();
+            text.destroy();
+            islandCreation();
+        }
+    }else if(signal == 1){
+        narration1 = NARRATION1;
+        //timer.destroy();
+    }
     
-
+    text.setText(narration1);
+    
+}
+function pause(){
+    //slight delay to allow game to load after intro
+    gameMode = 1;
+    volcanoes[0] = game.add.sprite(224,224,'seaVolcano');
+    volcanoes[1] = game.add.sprite(240,224,'seaVolcano');
+    volcanoes[2] = game.add.sprite(224,240,'seaVolcano');
+    volcanoes[3] = game.add.sprite(240,240,'seaVolcano');
+    eruptBar = game.add.sprite(0,460,'eruptbar');
+    fire = game.add.sprite(3,450,'fire');
+    timer.destroy();
+}
+function islandCreation(){
+    timer = game.time.create(true);
+    timer.loop(500, pause, this);
+    timer.start();
+    
+}
 
 function gofull() {
 
@@ -245,26 +304,23 @@ function gofull() {
 
 }
 
-function actionOnClick () {
-
-    sprite.tint = Math.random() * 0xFFFFFF;
-
-}
-
 function update() {
+    if (gameMode == 1){moveFire();}
     
-    moveFire();
     
     if (game.input.activePointer.isUp && click){
         click = false;
-        erupt();
+        if(gameMode == 0){
+            updateText(1);
+        }
+        if(gameMode ==1){erupt();}
     }
     if (game.input.activePointer.isDown){
         click = true;
     }
-        lavaFlows.forEach(function(element){
-            element.update();
-        })
+    lavaFlows.forEach(function(element){
+        element.update();
+    })
 
     
     
@@ -274,13 +330,6 @@ function update() {
     //drawMap();
     
     
-}
-
-function listener () {
-
-    counter++;
-    text.text = "You clicked " + counter + " times!";
-
 }
     
 /*********************************************************
@@ -322,10 +371,10 @@ function drawMap(){
     
 }
 function erupt(){
-    var picked = [3];
+    var picked = [];
     if (!lavaSpawned){
     if(fire.x >= 3 && fire.x <= 130){
-        //alert(lavaFlows.length+" " + lavaIndex);
+        //alert(picked[0]);
         lavaCount = 1;
         lavaFlows[lavaIndex] = new LavaFlow(lavaIndex,picked[0]=lavaStart(picked),game) ;
         lavaFlows[lavaIndex].checkLava();
@@ -368,6 +417,7 @@ function moveFire(){
         }
 }
 function lavaStart(lavas){
+    //Set unique lava start location
     var picked;
     var start;
     do{
@@ -380,12 +430,7 @@ function lavaStart(lavas){
     
     return start;
 }
-/*********************************************************
-Move a sprite down one tile
-**********************************************************/
-function moveSpriteDown(sprite){
-    tween.to(sprite)
-}
+
 </script>
 
 </body>
