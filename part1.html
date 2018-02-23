@@ -30,6 +30,7 @@ LavaFlow = function (index, start, game){
     this.game = game;
     this.last = 0;
     this.start = start;
+    this.speed = 0;
     if (start == 1){x=224;y=224;}
     else if (start == 2){x=240;y=224;}
     else if (start == 3){x=224;y=240;}
@@ -79,7 +80,7 @@ LavaFlow = function (index, start, game){
         else if (dir == 4 && this.last != 2 && (this.start == 3 || this.start == 4)){
             y += 16;
             this.last = dir;} //down*/
-        var tween = this.game.add.tween(this.lava).to({x: x, y: y},1000, Phaser.Easing.Linear.None, true);
+        var tween = this.game.add.tween(this.lava).to({x: x, y: y},500+this.speed, Phaser.Easing.Linear.None, true);
         tween.onComplete.add(onComplete, this);
     }
 
@@ -98,7 +99,7 @@ function onComplete(){
             lavaSpawned = false;
         }
         
-    } else{this.checkLava();}
+    } else{this.checkLava();this.speed+= 50;}
     
     
 }
