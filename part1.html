@@ -69,24 +69,16 @@ LavaFlow = function (index, start, intensity, game){
     
     if (start == 1){x=448;y=448;
         if(mapArray[14][14] == 2){
-            mapArray[14][14] = 3;
             volcanoes[0] = game.add.sprite(x, y, 'landVolcano');}}
     else if (start == 2){x=480;y=448;
         if(mapArray[15][14] == 2){
-            mapArray[15][14] = 3;
             volcanoes[1] = game.add.sprite(x, y, 'landVolcano');}}
     else if (start == 3){x=448;y=480;
         if(mapArray[14][15] == 2){
-            mapArray[14][15] = 3;
             volcanoes[2] = game.add.sprite(x, y, 'landVolcano');}}
     else if (start == 4){x=480;y=480;
         if(mapArray[15][15] == 2){
-            mapArray[15][15] = 3;
             volcanoes[3] = game.add.sprite(x, y, 'landVolcano');}}
-    mapArray[14][14] = 2;
-    mapArray[15][14] = 2;
-    mapArray[14][15] = 2;
-    mapArray[15][15] = 2;
     this.alive = true;
 
     this.lava = game.add.sprite(x, y, 'lavaflow');
@@ -95,6 +87,7 @@ LavaFlow = function (index, start, intensity, game){
     this.lava.animations.add('flowUp',[6,7,8],6);
     this.lava.animations.add('flowRight',[9,10,11],6);
     this.update = function(){
+        this.lava.bringToTop();
         if (this.direction == "flowLeft"){this.lava.animations.play('flowLeft');}
         else if (this.direction == "flowUp"){this.lava.animations.play('flowUp');}
         else if (this.direction == "flowDown"){this.lava.animations.play('flowDown');}
@@ -161,32 +154,30 @@ LavaFlow = function (index, start, intensity, game){
         if(this.intensity == 2){mnt -= 5;}
         else if(this.intensity == 3){mnt -= 10;}
         if(mapArray[tileX][tileY] == 0){ //no ground
-            var ground = game.rnd.integerInRange(1,100);
-            if (ground <=75){game.add.sprite(this.lava.x,this.lava.y,'ground');}
-            else if (ground >=76){game.add.sprite(this.lava.x,this.lava.y,'ground2');}
-            mapArray[tileX][tileY] = 1
+            checkTiles(tileX,tileY,"lava");
+            
             islandSize +=1;
             this.destroy();
         
         } else if (mapArray[tileX][tileY] == 1){
             
             if(this.speed >= 400 && mnt <= 10){
-                mapArray[tileX][tileY] = 4;
+                mapArray[tileX][tileY] = 3;
                 
                 game.add.sprite(this.lava.x,this.lava.y,'mountain');
                 this.destroy();
             } else if (this.speed >= 300 && mnt <=5){
-                mapArray[tileX][tileY] = 4;
+                mapArray[tileX][tileY] = 3;
                 
                 game.add.sprite(this.lava.x,this.lava.y,'mountain');
                 this.destroy();
             } else if (this.speed >= 200 && mnt <=3){
-                mapArray[tileX][tileY] = 4;
+                mapArray[tileX][tileY] = 3;
                 
                 game.add.sprite(this.lava.x,this.lava.y,'mountain');
                 this.destroy();
             } else if (this.speed >= 100 && mnt <=1){
-                mapArray[tileX][tileY] = 4;
+                mapArray[tileX][tileY] = 3;
                 
                 game.add.sprite(this.lava.x,this.lava.y,'mountain');
                 this.destroy();
@@ -213,7 +204,208 @@ LavaFlow = function (index, start, intensity, game){
 
 };
 
+function checkTiles(x,y,source){
+    //mapArray[x][y]   = current tile
+    //mapArray[x-1][y] = left tile
+    //mapArray[x+1][y] = right tile
+    //mapArray[x][y-1] = upper tile
+    //mapArray[x][y+1] = lower tile
+    //RETURNS
+    //0 = water, 1 = grass, 2 = volcano, 3 = mountain
+    var goAhead = 0;
+    var water = 0;
+    if(mapArray[x-1][y] == 0){ water += 3}
+    if(mapArray[x][y-1] == 0){ water += 11}
+    if(mapArray[x+1][y] == 0){ water +=17}
+    if(mapArray[x][y+1] == 0){ water += 22}
+    if ((source == "grass" && mapArray[x][y] != 0 && mapArray[x][y] != 2 && mapArray[x][y] != 3) || source == "lava")
+    {
+        if (water == 0){
+            plantGrass(x,y);
+        }if (water == 3){
+            game.add.sprite(x*SCALE,y*SCALE,"beachLeft");
+            mapArray[x][y] = 1;
+        }if (water == 11){
+            game.add.sprite(x*SCALE,y*SCALE,"beachUp");
+            mapArray[x][y] = 1;
+        }if (water == 17){
+            game.add.sprite(x*SCALE,y*SCALE,"beachRight");
+            mapArray[x][y] = 1;
+        }if (water == 22){
+            game.add.sprite(x*SCALE,y*SCALE,"beachDown");
+            mapArray[x][y] = 1;
+        }if (water == 14){
+            game.add.sprite(x*SCALE,y*SCALE,"beachLeftUp");
+            mapArray[x][y] = 1;
+        }if (water == 28){
+            game.add.sprite(x*SCALE,y*SCALE,"beachUpRight");
+            mapArray[x][y] = 1;
+        }if (water == 39){
+            game.add.sprite(x*SCALE,y*SCALE,"beachRightDown");
+            mapArray[x][y] = 1;
+        }if (water == 25){
+            game.add.sprite(x*SCALE,y*SCALE,"beachDownLeft");
+            mapArray[x][y] = 1;
+        }if (water == 33){
+            game.add.sprite(x*SCALE,y*SCALE,"beachUpDown");
+            mapArray[x][y] = 1;
+        }if (water == 20){
+            game.add.sprite(x*SCALE,y*SCALE,"beachLeftRight");
+            mapArray[x][y] = 1;
+        }if (water == 31){
+            game.add.sprite(x*SCALE,y*SCALE,"beachLeftUpRight");
+            mapArray[x][y] = 1;
+        }if (water == 50){
+            game.add.sprite(x*SCALE,y*SCALE,"beachUpRightDown");
+            mapArray[x][y] = 1;
+        }if (water == 42){
+            game.add.sprite(x*SCALE,y*SCALE,"beachRightDownLeft");
+            mapArray[x][y] = 1;
+        }if (water == 36){
+            game.add.sprite(x*SCALE,y*SCALE,"beachDownLeftUp");
+            mapArray[x][y] = 1;
+        }
+    
+        if (source != "grass"){
+            text.setText("x: " + x + "y: " + y + " ");
+            checkTiles(x-1,y,"grass");
+            checkTiles(x,y-1,"grass");
+            checkTiles(x+1,y,"grass");
+            checkTiles(x,y+1,"grass");
+        }
+    }
+    /*if(source=="lava" || source =="grass"){
+        if(mapArray[x-1][y] == 0){ //left tile is water
+            if(mapArray[x][y-1] == 0){ //Left and top tile water
+                if(mapArray[x+1][y] == 0){ //left, top and right are water
+                    if ((source == "lava" && mapArray[x][y] == 0) || (source == "grass" && mapArray[x][y] == 1)){
+                        game.add.sprite(x*SCALE,y*SCALE,"beachLeftUpRight");
+                        mapArray[x][y] = 1;
+                        goAhead = 1;
+                    }
+                }
+                if (goAhead == 0){
+                    if ((source == "lava" && mapArray[x][y] == 0) || (source == "grass" && mapArray[x][y] == 1)){
+                        game.add.sprite(x*SCALE,y*SCALE,"beachLeftUp");
+                        mapArray[x][y] = 1;
+                        goAhead = 1;
+                    }
+                }
+            if (goAhead == 0){
+                if ((source == "lava" && mapArray[x][y] == 0) || (source == "grass" && mapArray[x][y] == 1)){
+                    game.add.sprite(x*SCALE,y*SCALE,"beachLeft");
+                    mapArray[x][y] = 1;
+                    goAhead = 1;
+                }
+            }
+            }
+        }
+        if (mapArray[x][y-1] == 0 && goAhead == 0){ //Top tile is water and this tile not chosen
+            if(mapArray[x+1][y] == 0){ //top and right tile water
+                if(mapArray[x][y+1] == 0){ //top,right,bottom are water
+                    if ((source == "lava" && mapArray[x][y] == 0) || (source == "grass" && mapArray[x][y] == 1)){
+                        game.add.sprite(x*SCALE,y*SCALE,"beachUpRightDown");
+                        mapArray[x][y] = 1;
+                        goAhead = 1;
+                    }
+                }
+                if (goAhead == 0){
+                    if ((source == "lava" && mapArray[x][y] == 0) || (source == "grass" && mapArray[x][y] == 1)){
+                        game.add.sprite(x*SCALE,y*SCALE,"beachUpRight");
+                        mapArray[x][y] = 1;
+                        goAhead = 1;
+                    }
+                }
+            if (goAhead == 0){
+                if ((source == "lava" && mapArray[x][y] == 0) || (source == "grass" && mapArray[x][y] == 1)){
+                    game.add.sprite(x*SCALE,y*SCALE,"beachUp");
+                    mapArray[x][y] = 1;
+                    goAhead = 1;
+                }
+            }
+            }
+        }
+        if (mapArray[x+1][y] == 0 && goAhead == 0){ //right tile is water and this tile not chosen
+            if(mapArray[x][y+1] == 0){ //right,down tile water
+                if(mapArray[x-1][y] == 0){ //right,bottom,left are water
+                    if ((source == "lava" && mapArray[x][y] == 0) || (source == "grass" && mapArray[x][y] == 1)){
+                        game.add.sprite(x*SCALE,y*SCALE,"beachRightDownLeft");
+                        mapArray[x][y] = 1;
+                        goAhead = 1;
+                    }
+                }
+                if (goAhead == 0){
+                    if ((source == "lava" && mapArray[x][y] == 0) || (source == "grass" && mapArray[x][y] == 1)){
+                        game.add.sprite(x*SCALE,y*SCALE,"beachRightDown");
+                        mapArray[x][y] = 1;
+                        goAhead = 1;
+                    }
+                }
+            if (goAhead == 0){
+                if ((source == "lava" && mapArray[x][y] == 0) || (source == "grass" && mapArray[x][y] == 1)){
+                    game.add.sprite(x*SCALE,y*SCALE,"beachRight");
+                    mapArray[x][y] = 1;
+                    goAhead = 1;
+                }
+            }
+            }
+        }
+        if (mapArray[x][y+1] == 0 && goAhead == 0){ //down tile is water and this tile not chosen
+            if(mapArray[x-1][y] == 0){ //down,left tile water
+                if(mapArray[x][y-1] == 0){ //bottom,left,top are water
+                    if ((source == "lava" && mapArray[x][y] == 0) || (source == "grass" && mapArray[x][y] == 1)){
+                        game.add.sprite(x*SCALE,y*SCALE,"beactDownLeftUp");
+                        mapArray[x][y] = 1;
+                        goAhead = 1;
+                    }
+                }
+                if (goAhead == 0){
+                    if ((source == "lava" && mapArray[x][y] == 0) || (source == "grass" && mapArray[x][y] == 1)){
+                        game.add.sprite(x*SCALE,y*SCALE,"beachDownLeft");
+                        mapArray[x][y] = 1;
+                        goAhead = 1;
+                    }
+                }
+            if (goAhead == 0){
+                if ((source == "lava" && mapArray[x][y] == 0) || (source == "grass" && mapArray[x][y] == 1)){
+                    game.add.sprite(x*SCALE,y*SCALE,"beachDown");
+                    mapArray[x][y] = 1;
+                    goAhead = 1;
+                }
+            }
+            }
+        }
+        if ((source == "lava" && goAhead == 0) || (source == "grass" && mapArray[x][y] != 0 && mapArray[x][y] != 2 && goAhead == 0)){ //no water\
+            plantGrass(x,y);
+            
+        }
+        if (source != "grass"){
+            text.setText("x: " + x + "y: " + y + " ");
+            checkTiles(x-1,y,"grass");
+            checkTiles(x,y-1,"grass");
+            checkTiles(x+1,y,"grass");
+            checkTiles(x,y+1,"grass");
+        }
 
+    }*/
+    /*game.load.image('beachLeft', 'assets/32/grasstile2.png');
+    game.load.image('beachUp', 'assets/32/grasstile2.png');
+    game.load.image('beachRight', 'assets/32/grasstile2.png');
+    game.load.image('beachLeftUp', 'assets/32/grasstile2.png');
+    game.load.image('beachUpRight', 'assets/32/grasstile2.png');
+    game.load.image('beachRightDown', 'assets/32/grasstile2.png');
+    game.load.image('beachDownLeft', 'assets/32/grasstile2.png');
+    game.load.image('beachDownLeftUp', 'assets/32/grasstile2.png');
+    game.load.image('beachLeftUpRight', 'assets/32/grasstile2.png');
+    game.load.image('beachUpRightDown', 'assets/32/grasstile2.png');
+    game.load.image('beachRightDownLeft', 'assets/32/grasstile2.png');*/
+}
+function plantGrass(x,y){
+    var ground = game.rnd.integerInRange(1,100);
+    if (ground <=75){game.add.sprite(x*SCALE,y*SCALE,'ground');}
+    else if (ground >=76){game.add.sprite(x*SCALE,y*SCALE,'ground2');}
+    mapArray[x][y] = 1;
+}
 function preload() {
     
 
@@ -228,6 +420,20 @@ function preload() {
     game.load.image('narrator','assets/oldman.png');
     game.load.image('speech','assets/speechbubble.png');
     game.load.image('ground2', 'assets/32/grasstile2.png');
+    game.load.image('beachLeft', 'assets/32/beachLeft.png');
+    game.load.image('beachUp', 'assets/32/beachUp.png');
+    game.load.image('beachRight', 'assets/32/beachRight.png');
+    game.load.image('beachDown', 'assets/32/beachDown.png');
+    game.load.image('beachLeftUp', 'assets/32/beachLeftUp.png');
+    game.load.image('beachUpRight', 'assets/32/beachUpRight.png');
+    game.load.image('beachRightDown', 'assets/32/beachRightDown.png');
+    game.load.image('beachDownLeft', 'assets/32/beachDownLeft.png');
+    game.load.image('beachUpDown', 'assets/32/beachUpDown.png');
+    game.load.image('beachLeftRight', 'assets/32/beachLeftRight.png');
+    game.load.image('beachDownLeftUp', 'assets/32/beachDownLeftUp.png');
+    game.load.image('beachLeftUpRight', 'assets/32/beachLeftUpRight.png');
+    game.load.image('beachUpRightDown', 'assets/32/beachUpRightDown.png');
+    game.load.image('beachRightDownLeft', 'assets/32/beachRightDownLeft.png');
 }
 
 
@@ -305,11 +511,6 @@ function create() {
     timer.loop(50, updateText, this);
     //text = game.add.text(250, 16, '', { fill: '#ffffff' });
     
-    //Set Volcano Tiles in Array
-    mapArray[14][14] = 2;
-    mapArray[15][14] = 2;
-    mapArray[14][15] = 2;
-    mapArray[15][15] = 2;
     intro();
 }
 function intro(){
@@ -366,6 +567,11 @@ function pause(){
     volcanoes[1] = game.add.sprite(480,448,'seaVolcano');
     volcanoes[2] = game.add.sprite(448,480,'seaVolcano');
     volcanoes[3] = game.add.sprite(480,480,'seaVolcano');
+    //Set Volcano Tiles in Array
+    mapArray[14][14] = 2;
+    mapArray[15][14] = 2;
+    mapArray[14][15] = 2;
+    mapArray[15][15] = 2;
     eruptBar = game.add.sprite(0,920,'eruptbar');
     eruptBar.scale.setTo(2,2);
     fire = game.add.sprite(6,900,'fire');
@@ -380,11 +586,11 @@ function phase1Timer(){
     if (phase1Time == 0){
         //Begin Phase 2 Here
     }
-    text.setText("Time Remaining: " + phase1Time);
+    //text.setText("Time Remaining: " + phase1Time);
 }
 function islandCreation(){
     text = game.add.text(5,5,"",{ font: "50px Arial", fill: '#ffffff', wordWrap: true, wordWrapWidth: 800 });
-    text.setText("Time Remaining: " + phase1Time);
+    //text.setText("Time Remaining: " + phase1Time);
     timer = game.time.create(true);
     timer.loop(500, pause, this);
     timer.start();
