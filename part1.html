@@ -312,11 +312,11 @@ function create() {
     intro();
 }
 function intro(){
-    speechBubble = game.add.sprite(5,50,'speech');
-    speechBubble.scale.setTo(.5,.25);
-    narrator = game.add.sprite(360,280,'narrator');
-    narrator.scale.setTo(.25,.25);
-    text = game.add.text(40,80,"",{ font: "25px Arial", fill: '#000000', wordWrap: true, wordWrapWidth: 400 });
+    speechBubble = game.add.sprite(10,100,'speech');
+    speechBubble.scale.setTo(1,.5);
+    narrator = game.add.sprite(700,560,'narrator');
+    narrator.scale.setTo(.5,.5);
+    text = game.add.text(80,160,"",{ font: "50px Arial", fill: '#000000', wordWrap: true, wordWrapWidth: 800 });
     timer.start();
 }
 function updateText(signal){
@@ -344,6 +344,7 @@ function updateText(signal){
             narrator.destroy();
             speechBubble.destroy();
             text.destroy();
+            NARRATION1 = "";
             narration1 = "";
             textCount = 0;
             islandCreation();
@@ -364,8 +365,10 @@ function pause(){
     volcanoes[1] = game.add.sprite(480,448,'seaVolcano');
     volcanoes[2] = game.add.sprite(448,480,'seaVolcano');
     volcanoes[3] = game.add.sprite(480,480,'seaVolcano');
-    eruptBar = game.add.sprite(0,460,'eruptbar');
-    fire = game.add.sprite(3,450,'fire');
+    eruptBar = game.add.sprite(0,920,'eruptbar');
+    eruptBar.scale.setTo(2,2);
+    fire = game.add.sprite(6,900,'fire');
+    fire.scale.setTo(2,2);
     timer.destroy();
     timer = game.time.create(true);
     timer.loop(1000, phase1Timer, this);
@@ -379,7 +382,7 @@ function phase1Timer(){
     text.setText("Time Remaining: " + phase1Time);
 }
 function islandCreation(){
-    text = game.add.text(5,5,"",{ font: "25px Arial", fill: '#ffffff', wordWrap: true, wordWrapWidth: 400 });
+    text = game.add.text(5,5,"",{ font: "50px Arial", fill: '#ffffff', wordWrap: true, wordWrapWidth: 800 });
     text.setText("Time Remaining: " + phase1Time);
     timer = game.time.create(true);
     timer.loop(500, pause, this);
@@ -462,13 +465,13 @@ function drawMap(){
 function erupt(){
     var picked = [];
     if (!lavaSpawned){
-    if(fire.x >= 3 && fire.x <= 130){
+    if(fire.x >= 3 && fire.x <= 240){
         //alert(picked[0]);
         lavaCount = 1;
         lavaFlows[lavaIndex] = new LavaFlow(lavaIndex,picked[0]=lavaStart(picked),1,game) ;
         lavaFlows[lavaIndex].checkLava();
         lavaIndex +=1;
-    }else if(fire.x >= 131 && fire.x <= 320){
+    }else if(fire.x >= 241 && fire.x <= 660){
         lavaCount = 2;
         lavaFlows[lavaIndex] = new LavaFlow(lavaIndex,picked[0]=lavaStart(picked),2,game) ;
         lavaFlows[lavaIndex].checkLava();
@@ -476,7 +479,7 @@ function erupt(){
         lavaFlows[lavaIndex] = new LavaFlow(lavaIndex,picked[1]=lavaStart(picked),2,game) ;
         lavaFlows[lavaIndex].checkLava();
         lavaIndex +=1;
-    }else if(fire.x >= 321){
+    }else if(fire.x >= 661){
         lavaCount = 3;
         lavaFlows[lavaIndex] = new LavaFlow(lavaIndex,picked[0]=lavaStart(picked),3,game) ;
         lavaFlows[lavaIndex].checkLava();
@@ -494,14 +497,14 @@ function erupt(){
     lavaSpawned = true;
 }
 function moveFire(){
-    if (fire.x == 448)
+    if (fire.x == 896)
         {
-            game.add.tween(fire).to({x: 3}, 1000 , Phaser.Easing.Out, true);
+            game.add.tween(fire).to({x: 6}, 1000 , Phaser.Easing.Out, true);
 
         }
-    else if (fire.x == 3)
+    else if (fire.x == 6)
         {
-            game.add.tween(fire).to({x: 448}, 1000 , Phaser.Easing.Out, true);
+            game.add.tween(fire).to({x: 896}, 1000 , Phaser.Easing.Out, true);
 
         }
 }
