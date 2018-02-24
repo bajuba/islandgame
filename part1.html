@@ -161,8 +161,9 @@ LavaFlow = function (index, start, intensity, game){
         if(this.intensity == 2){mnt -= 5;}
         else if(this.intensity == 3){mnt -= 10;}
         if(mapArray[tileX][tileY] == 0){ //no ground
-            
-            game.add.sprite(this.lava.x,this.lava.y,'ground');
+            var ground = game.rnd.integerInRange(1,100);
+            if (ground <=75){game.add.sprite(this.lava.x,this.lava.y,'ground');}
+            else if (ground >=76){game.add.sprite(this.lava.x,this.lava.y,'ground2');}
             mapArray[tileX][tileY] = 1
             islandSize +=1;
             this.destroy();
@@ -226,7 +227,7 @@ function preload() {
     game.load.image('fire','assets/fire.png');
     game.load.image('narrator','assets/oldman.png');
     game.load.image('speech','assets/speechbubble.png');
-    
+    game.load.image('ground2', 'assets/32/grasstile2.png');
 }
 
 
