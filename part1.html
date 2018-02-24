@@ -123,10 +123,7 @@ LavaFlow = function (index, start, intensity, game){
         var tileX = this.lava.x /16;
         var tileY = this.lava.y /16;
         var mnt = game.rnd.integerInRange(1,100); //Random chance to create mountain
-        if (this.speed >= 300){this.lava.tint = 0x808080;}
-        else if(this.speed >= 200){this.lava.tint = 0xA9A9A9;}
-        else if (this.speed >= 100){this.lava.tint = 0xBEBEBE;}
-        else if (this.speed >= 0){this.lava.tint = 0xF5F5F5;}
+        
         //Increase chance of spawning mountain at higher intensity
         if(this.intensity == 2){mnt -= 5;}
         else if(this.intensity == 3){mnt -= 10;}
@@ -162,7 +159,14 @@ LavaFlow = function (index, start, intensity, game){
             }else {this.checkLava();this.speed+= game.rnd.integerInRange(50,150);}
             
             
+        }else if(mapArray[tileX][tileY] == 4){
+            this.speed += 200;
+            this.checkLava();this.speed+= game.rnd.integerInRange(50,150);
         }else {this.checkLava();this.speed+= game.rnd.integerInRange(50,150);}
+        if (this.speed >= 300){this.lava.tint = 0x808080;}
+        else if(this.speed >= 200){this.lava.tint = 0xA9A9A9;}
+        else if (this.speed >= 100){this.lava.tint = 0xBEBEBE;}
+        else if (this.speed >= 0){this.lava.tint = 0xF5F5F5;}
     }
     this.destroy = function(){
         lavaFlows.splice(this.index, 1);
