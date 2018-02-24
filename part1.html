@@ -30,7 +30,7 @@ var SCALE = 16;
 var gameMode = 0;
 var timer;
 var text;
-var NARRATION1 = "Welcome to the middle of nowhere! Once upon a time, some shitty volcanoes erupted and created an island."
+var NARRATION1 = "Welcome to the middle of nowhere! Once upon a time, some volcanoes erupted and created an island."
 var narration1 = "";
 var speechBubble;
 var textCount = 0;
@@ -43,6 +43,7 @@ var islandMap;
 var layer1;
 var platforms;
 var player;
+var phase1Time = 100; //number of seconds to build island
 var cursors;
 var click = false;
 var lavaFlows = [];
@@ -53,7 +54,7 @@ var mapArray = createArray(30,30);
 var debug;
 var islandSize = 0;
 var narrator;
-LavaFlow = function (index, start, game){
+LavaFlow = function (index, start, intensity, game){
     var x, y;
     
     this.index = index;
@@ -61,6 +62,8 @@ LavaFlow = function (index, start, game){
     this.last = 0;
     this.start = start;
     this.speed = 0;
+    this.intensity = intensity;
+    
     if (start == 1){x=224;y=224;
         if(mapArray[14][14] == 2){
             mapArray[14][14] = 3;
@@ -93,7 +96,6 @@ LavaFlow = function (index, start, game){
         
         var x = this.lava.x;
         var y = this.lava.y;
-        
         var dir;
         if (this.start == 1){ //Top Left
             dir = game.rnd.integerInRange(1,2);
@@ -120,12 +122,14 @@ LavaFlow = function (index, start, game){
         //Move complete. Add logic to determine what tile is under lava
         var tileX = this.lava.x /16;
         var tileY = this.lava.y /16;
-        var mnt = game.rnd.integerInRange(1,100);
+        var mnt = game.rnd.integerInRange(1,100); //Random chance to create mountain
         if (this.speed >= 300){this.lava.tint = 0x808080;}
         else if(this.speed >= 200){this.lava.tint = 0xA9A9A9;}
         else if (this.speed >= 100){this.lava.tint = 0xBEBEBE;}
         else if (this.speed >= 0){this.lava.tint = 0xF5F5F5;}
-        
+        //Increase chance of spawning mountain at higher intensity
+        if(this.intensity == 2){mnt -= 5;}
+        else if(this.intensity == 3){mnt -= 10;}
         if(mapArray[tileX][tileY] == 0){ //no ground
             
             game.add.sprite(this.lava.x,this.lava.y,'ground');
@@ -135,22 +139,22 @@ LavaFlow = function (index, start, game){
         
         } else if (mapArray[tileX][tileY] == 1){
             
-            if(this.speed >= 400 && mnt <= 20){
+            if(this.speed >= 400 && mnt <= 10){
                 mapArray[tileX][tileY] = 4;
                 
                 game.add.sprite(this.lava.x,this.lava.y,'mountain');
                 this.destroy();
-            } else if (this.speed >= 300 && mnt <=10){
+            } else if (this.speed >= 300 && mnt <=5){
                 mapArray[tileX][tileY] = 4;
                 
                 game.add.sprite(this.lava.x,this.lava.y,'mountain');
                 this.destroy();
-            } else if (this.speed >= 200 && mnt <=5){
+            } else if (this.speed >= 200 && mnt <=3){
                 mapArray[tileX][tileY] = 4;
                 
                 game.add.sprite(this.lava.x,this.lava.y,'mountain');
                 this.destroy();
-            } else if (this.speed >= 100 && mnt <=2){
+            } else if (this.speed >= 100 && mnt <=1){
                 mapArray[tileX][tileY] = 4;
                 
                 game.add.sprite(this.lava.x,this.lava.y,'mountain');
@@ -170,10 +174,6 @@ LavaFlow = function (index, start, game){
     }
 
 };
-
-
-    
-    
 
 
 function preload() {
@@ -289,16 +289,28 @@ function updateText(signal){
     if(narration1 == NARRATION1){
         //Done with text
         if (signal == 1 && narrationCount == 0){
-            NARRATION1 = "Well... Do it, fucker!";
+            NARRATION1 = "As the lava flowed, it cooled over the water and freshly formed land.";
             narration1 = "";
             textCount = 0;
             narrationCount = 1;
-        }else if (narrationCount == 1){narrationCount = 2;}
-        if(signal == 1 && narrationCount == 2){
+        }else if (signal == 1 && narrationCount == 1){
+            NARRATION1 = "The more intense the eruptions, the higher chance the lava would cool upon the ground forming mountains.";
+            narration1 = "";
+            textCount = 0;
+            narrationCount = 2;
+        }else if(signal == 1 && narrationCount == 2){
+            NARRATION1 = "Intense eruptions could form the island quicker, but the mountains they left behind inhibit plant growth!";
+            narration1 = "";
+            textCount = 0;
+            narrationCount =3 ;
+        }else if(narrationCount == 3){narrationCount = 4;}
+        if(signal == 1 && narrationCount == 4){
             timer.destroy();
             narrator.destroy();
             speechBubble.destroy();
             text.destroy();
+            narration1 = "";
+            textCount = 0;
             islandCreation();
         }
     }else if(signal == 1){
@@ -312,6 +324,7 @@ function updateText(signal){
 function pause(){
     //slight delay to allow game to load after intro
     gameMode = 1;
+    
     volcanoes[0] = game.add.sprite(224,224,'seaVolcano');
     volcanoes[1] = game.add.sprite(240,224,'seaVolcano');
     volcanoes[2] = game.add.sprite(224,240,'seaVolcano');
@@ -319,8 +332,20 @@ function pause(){
     eruptBar = game.add.sprite(0,460,'eruptbar');
     fire = game.add.sprite(3,450,'fire');
     timer.destroy();
+    timer = game.time.create(true);
+    timer.loop(1000, phase1Timer, this);
+    timer.start();
+}
+function phase1Timer(){
+    phase1Time -= 1;
+    if (phase1Time == 0){
+        //Begin Phase 2 Here
+    }
+    text.setText("Time Remaining: " + phase1Time);
 }
 function islandCreation(){
+    text = game.add.text(5,5,"",{ font: "25px Arial", fill: '#ffffff', wordWrap: true, wordWrapWidth: 400 });
+    text.setText("Time Remaining: " + phase1Time);
     timer = game.time.create(true);
     timer.loop(500, pause, this);
     timer.start();
@@ -405,26 +430,26 @@ function erupt(){
     if(fire.x >= 3 && fire.x <= 130){
         //alert(picked[0]);
         lavaCount = 1;
-        lavaFlows[lavaIndex] = new LavaFlow(lavaIndex,picked[0]=lavaStart(picked),game) ;
+        lavaFlows[lavaIndex] = new LavaFlow(lavaIndex,picked[0]=lavaStart(picked),1,game) ;
         lavaFlows[lavaIndex].checkLava();
         lavaIndex +=1;
     }else if(fire.x >= 131 && fire.x <= 320){
         lavaCount = 2;
-        lavaFlows[lavaIndex] = new LavaFlow(lavaIndex,picked[0]=lavaStart(picked),game) ;
+        lavaFlows[lavaIndex] = new LavaFlow(lavaIndex,picked[0]=lavaStart(picked),2,game) ;
         lavaFlows[lavaIndex].checkLava();
         lavaIndex +=1;
-        lavaFlows[lavaIndex] = new LavaFlow(lavaIndex,picked[1]=lavaStart(picked),game) ;
+        lavaFlows[lavaIndex] = new LavaFlow(lavaIndex,picked[1]=lavaStart(picked),2,game) ;
         lavaFlows[lavaIndex].checkLava();
         lavaIndex +=1;
     }else if(fire.x >= 321){
         lavaCount = 3;
-        lavaFlows[lavaIndex] = new LavaFlow(lavaIndex,picked[0]=lavaStart(picked),game) ;
+        lavaFlows[lavaIndex] = new LavaFlow(lavaIndex,picked[0]=lavaStart(picked),3,game) ;
         lavaFlows[lavaIndex].checkLava();
         lavaIndex +=1;
-        lavaFlows[lavaIndex] = new LavaFlow(lavaIndex,picked[1]=lavaStart(picked),game) ;
+        lavaFlows[lavaIndex] = new LavaFlow(lavaIndex,picked[1]=lavaStart(picked),3,game) ;
         lavaFlows[lavaIndex].checkLava();
         lavaIndex +=1;
-        lavaFlows[lavaIndex] = new LavaFlow(lavaIndex,picked[2]=lavaStart(picked),game) ;
+        lavaFlows[lavaIndex] = new LavaFlow(lavaIndex,picked[2]=lavaStart(picked),3,game) ;
         lavaFlows[lavaIndex].checkLava();
         lavaIndex +=1;
     }
