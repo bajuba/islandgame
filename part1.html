@@ -120,25 +120,53 @@ LavaFlow = function (index, start, game){
         //Move complete. Add logic to determine what tile is under lava
         var tileX = this.lava.x /16;
         var tileY = this.lava.y /16;
-        //this.lava.tint = (1000 - this.speed) * 0xffffff;
-        if (this.speed >= 200){this.lava.tint = 0x808080;}
-        else if(this.speed >= 125){this.lava.tint = 0xA9A9A9;}
-        else if (this.speed >= 75){this.lava.tint = 0xBEBEBE;}
-        else if (this.speed > 0){this.lava.tint = 0xF5F5F5;}
-    
-        if(mapArray[tileX][tileY] == 0){ //no ground
+        var mnt = game.rnd.integerInRange(1,100);
+        if (this.speed >= 300){this.lava.tint = 0x808080;}
+        else if(this.speed >= 200){this.lava.tint = 0xA9A9A9;}
+        else if (this.speed >= 100){this.lava.tint = 0xBEBEBE;}
+        else if (this.speed >= 0){this.lava.tint = 0xF5F5F5;}
         
+        if(mapArray[tileX][tileY] == 0){ //no ground
+            
             game.add.sprite(this.lava.x,this.lava.y,'ground');
             mapArray[tileX][tileY] = 1
             islandSize +=1;
-            lavaFlows.splice(this.index, 1);
-            this.lava.destroy();
-            lavaCount -= 1;
-            if (lavaCount == 0){
-                lavaSpawned = false;
-            }
+            this.destroy();
         
-        } else{this.checkLava();this.speed+= 75;}
+        } else if (mapArray[tileX][tileY] == 1){
+            
+            if(this.speed >= 400 && mnt <= 20){
+                mapArray[tileX][tileY] = 4;
+                
+                game.add.sprite(this.lava.x,this.lava.y,'mountain');
+                this.destroy();
+            } else if (this.speed >= 300 && mnt <=10){
+                mapArray[tileX][tileY] = 4;
+                
+                game.add.sprite(this.lava.x,this.lava.y,'mountain');
+                this.destroy();
+            } else if (this.speed >= 200 && mnt <=5){
+                mapArray[tileX][tileY] = 4;
+                
+                game.add.sprite(this.lava.x,this.lava.y,'mountain');
+                this.destroy();
+            } else if (this.speed >= 100 && mnt <=2){
+                mapArray[tileX][tileY] = 4;
+                
+                game.add.sprite(this.lava.x,this.lava.y,'mountain');
+                this.destroy();
+            }else {this.checkLava();this.speed+= game.rnd.integerInRange(50,150);}
+            
+            
+        }else {this.checkLava();this.speed+= game.rnd.integerInRange(50,150);}
+    }
+    this.destroy = function(){
+        lavaFlows.splice(this.index, 1);
+        this.lava.destroy();
+        lavaCount -= 1;
+        if (lavaCount == 0){
+            lavaSpawned = false;
+        }
     }
 
 };
@@ -163,6 +191,7 @@ function preload() {
     game.load.image('fire','assets/fire.png');
     game.load.image('narrator','assets/oldman.png');
     game.load.image('speech','assets/speechbubble.png');
+    game.load.image('mountain','assets/mountain.png');
 }
 
 
