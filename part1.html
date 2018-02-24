@@ -25,8 +25,8 @@
 /*******************
 **Global Variables**
 *******************/
-var game = new Phaser.Game(480, 480, Phaser.AUTO,'', { preload: preload, create: create, update: update });
-var SCALE = 16;
+var game = new Phaser.Game(960, 960, Phaser.AUTO,'', { preload: preload, create: create, update: update });
+var SCALE = 32;
 var gameMode = 0;
 var timer;
 var text;
@@ -65,20 +65,21 @@ LavaFlow = function (index, start, intensity, game){
     this.start = start;
     this.speed = 0;
     this.intensity = intensity;
-    this.direction = "";
-    if (start == 1){x=224;y=224;
+    this.direction = "flowDown";
+    
+    if (start == 1){x=448;y=448;
         if(mapArray[14][14] == 2){
             mapArray[14][14] = 3;
             volcanoes[0] = game.add.sprite(x, y, 'landVolcano');}}
-    else if (start == 2){x=240;y=224;
+    else if (start == 2){x=480;y=448;
         if(mapArray[15][14] == 2){
             mapArray[15][14] = 3;
             volcanoes[1] = game.add.sprite(x, y, 'landVolcano');}}
-    else if (start == 3){x=224;y=240;
+    else if (start == 3){x=448;y=480;
         if(mapArray[14][15] == 2){
             mapArray[14][15] = 3;
             volcanoes[2] = game.add.sprite(x, y, 'landVolcano');}}
-    else if (start == 4){x=240;y=240;
+    else if (start == 4){x=480;y=480;
         if(mapArray[15][15] == 2){
             mapArray[15][15] = 3;
             volcanoes[3] = game.add.sprite(x, y, 'landVolcano');}}
@@ -90,8 +91,14 @@ LavaFlow = function (index, start, intensity, game){
 
     this.lava = game.add.sprite(x, y, 'lavaflow');
     this.lava.animations.add('flowDown', [0,1,2], 6);
+    this.lava.animations.add('flowLeft',[3,4,5],6);
+    this.lava.animations.add('flowUp',[6,7,8],6);
+    this.lava.animations.add('flowRight',[9,10,11],6);
     this.update = function(){
-        this.lava.animations.play('flowDown');
+        if (this.direction == "flowLeft"){this.lava.animations.play('flowLeft');}
+        else if (this.direction == "flowUp"){this.lava.animations.play('flowUp');}
+        else if (this.direction == "flowDown"){this.lava.animations.play('flowDown');}
+        else if (this.direction == "flowRight"){this.lava.animations.play('flowRight');}
     }
     this.checkLava = function(){
         //Move lava in random direction
@@ -103,48 +110,40 @@ LavaFlow = function (index, start, intensity, game){
             dir = game.rnd.integerInRange(1,2);
             if (dir == 1){ //Move Left
                 x -= SCALE;
-                this.lava.animations.add('flowLeft',[3,4,5],6);
                 this.direction = "flowLeft";
             }
             else if(dir == 2){
                 y -= SCALE;
-                this.lava.animations.add('flowUp',[3,4,5],6);
                 this.direction = "flowUp";
             } //Move Up
         }else if (this.start == 2){ //Top Right
             dir = game.rnd.integerInRange(1,2);
             if (dir == 1){
                 x += SCALE;
-                this.lava.animations.add('flowRight',[3,4,5],6);
                 this.direction = "flowRight";
             } //Move Right
             else if(dir == 2){
                 y -= SCALE;
-                this.lava.animations.add('flowUp',[3,4,5],6);
                 this.direction = "flowUp";
             } //Move Up
         }else if (this.start == 3){ //Bottom Left
             dir = game.rnd.integerInRange(1,2);
             if (dir == 1){
                 x -= SCALE;
-                this.lava.animations.add('flowLeft',[3,4,5],6);
                 this.direction = "flowLeft";
             } //Move Left
             else if(dir == 2){
                 y += SCALE;
-                this.lava.animations.add('flowDown',[3,4,5],6);
                 this.direction = "flowDown";
             } //Move Down
         }else if (this.start == 4){ //Bottom Right
             dir = game.rnd.integerInRange(1,2);
             if (dir == 1){
                 x += SCALE;
-                this.lava.animations.add('flowRight',[3,4,5],6);
                 this.direction = "flowRight";
             } //Move Right
             else if(dir == 2){
                 y += SCALE
-                this.lava.animations.add('flowDown',[3,4,5],6);
                 this.direction = "flowDown";
             } //Move Down
         }
@@ -154,8 +153,8 @@ LavaFlow = function (index, start, intensity, game){
     }
     this.move = function(){
         //Move complete. Add logic to determine what tile is under lava
-        var tileX = this.lava.x /16;
-        var tileY = this.lava.y /16;
+        var tileX = this.lava.x /SCALE;
+        var tileY = this.lava.y /SCALE;
         var mnt = game.rnd.integerInRange(1,100); //Random chance to create mountain
         
         //Increase chance of spawning mountain at higher intensity
@@ -216,20 +215,18 @@ LavaFlow = function (index, start, intensity, game){
 
 function preload() {
     
-    game.load.image('sky', 'assets/sky.png');
-    game.load.image('ground', 'assets/grass1.png');
-    game.load.image('star', 'assets/star.png');
-    game.load.spritesheet('dude', 'assets/dude.png', 32, 48);
-    game.load.image('tiles','assets/island.png');
-    game.load.image('debug','assets/debug.png');
-    game.load.image('seaVolcano','assets/volcano.png');
-    game.load.image('landVolcano','assets/volcanograss.png');
-    lavaSheet = game.load.spritesheet('lavaflow','assets/lavaflow.png',SCALE,SCALE);
+
+    game.load.image('ground', 'assets/32/grasstile.png');
+    game.load.image('mountain','assets/32/mountain.png');
+    game.load.image('tiles','assets/32/island.png');
+    game.load.image('seaVolcano','assets/32/volcano.png');
+    game.load.image('landVolcano','assets/32/volcanograss.png');
+    game.load.spritesheet('lavaflow','assets/32/lavaflow.png',32,32);
     game.load.image('eruptbar','assets/eruptBar.png');
     game.load.image('fire','assets/fire.png');
     game.load.image('narrator','assets/oldman.png');
     game.load.image('speech','assets/speechbubble.png');
-    game.load.image('mountain','assets/mountain.png');
+    
 }
 
 
@@ -363,10 +360,10 @@ function pause(){
     //slight delay to allow game to load after intro
     gameMode = 1;
     
-    volcanoes[0] = game.add.sprite(224,224,'seaVolcano');
-    volcanoes[1] = game.add.sprite(240,224,'seaVolcano');
-    volcanoes[2] = game.add.sprite(224,240,'seaVolcano');
-    volcanoes[3] = game.add.sprite(240,240,'seaVolcano');
+    volcanoes[0] = game.add.sprite(448,448,'seaVolcano');
+    volcanoes[1] = game.add.sprite(480,448,'seaVolcano');
+    volcanoes[2] = game.add.sprite(448,480,'seaVolcano');
+    volcanoes[3] = game.add.sprite(480,480,'seaVolcano');
     eruptBar = game.add.sprite(0,460,'eruptbar');
     fire = game.add.sprite(3,450,'fire');
     timer.destroy();
