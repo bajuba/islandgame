@@ -43,7 +43,7 @@ var islandMap;
 var layer1;
 var platforms;
 var player;
-var phase1Time = 100; //number of seconds to build island
+var phase1Time = 10; //number of seconds to build island
 var cursors;
 var click = false;
 var lavaFlows = [];
@@ -51,6 +51,13 @@ var lavaCount; //Used for preventing multiple eruptions at once
 var lavaIndex = 0; //keep track of lava in array
 var lavaSpawned = false; //register only one click at a time
 var lavaSheet;
+var windArray = [];
+var windIndex = 0;
+var windTimerBuild;
+var windTimerUse;
+var windButton;
+var windCount;
+var windTime=5;
 var mapArray = createArray(30,30);
 var debug;
 var islandSize = 0;
@@ -267,7 +274,6 @@ function checkTiles(x,y,source){
         }
     
         if (source != "grass"){
-            text.setText("x: " + x + "y: " + y + " ");
             checkTiles(x-1,y,"grass");
             checkTiles(x,y-1,"grass");
             checkTiles(x+1,y,"grass");
@@ -388,23 +394,61 @@ function checkTiles(x,y,source){
         }
 
     }*/
-    /*game.load.image('beachLeft', 'assets/32/grasstile2.png');
-    game.load.image('beachUp', 'assets/32/grasstile2.png');
-    game.load.image('beachRight', 'assets/32/grasstile2.png');
-    game.load.image('beachLeftUp', 'assets/32/grasstile2.png');
-    game.load.image('beachUpRight', 'assets/32/grasstile2.png');
-    game.load.image('beachRightDown', 'assets/32/grasstile2.png');
-    game.load.image('beachDownLeft', 'assets/32/grasstile2.png');
-    game.load.image('beachDownLeftUp', 'assets/32/grasstile2.png');
-    game.load.image('beachLeftUpRight', 'assets/32/grasstile2.png');
-    game.load.image('beachUpRightDown', 'assets/32/grasstile2.png');
-    game.load.image('beachRightDownLeft', 'assets/32/grasstile2.png');*/
 }
 function plantGrass(x,y){
     var ground = game.rnd.integerInRange(1,100);
     if (ground <=75){game.add.sprite(x*SCALE,y*SCALE,'ground');}
     else if (ground >=76){game.add.sprite(x*SCALE,y*SCALE,'ground2');}
     mapArray[x][y] = 1;
+}
+    
+Wind = function (index, game){
+    
+    this.index = index;
+    this.game = game;
+    this.last = 0;
+    this.speed = 0;
+    this.intensity = 0;
+    this.onIsland = false
+    //this.timer = game.time.create(false);
+    //this.timer.loop(game.rnd.integerInRange(6000,20000), this.time, this);
+    //this.timer.start();
+    
+    this.x = game.rnd.integerInRange(4,25);
+    this.y = game.rnd.integerInRange(4,25);
+    if (mapArray[this.x][this.y] == 0){mapArray[this.x][this.y] = 4; this.onIsland = false;}else{this.onIsland=true;}
+    this.direction = game.rnd.integerInRange(1,4);
+    if (this.direction == 1){this.wind = game.add.sprite(this.x*SCALE, this.y*SCALE, 'windLeft');}
+    if (this.direction == 2){this.wind = game.add.sprite(this.x*SCALE, this.y*SCALE, 'windUp');}
+    if (this.direction == 3){this.wind = game.add.sprite(this.x*SCALE, this.y*SCALE, 'windRight');}
+    if (this.direction == 4){this.wind = game.add.sprite(this.x*SCALE, this.y*SCALE, 'windDown');}
+    this.wind.inputEnabled = true;
+    this.wind.events.onInputDown.add(clickWind,this);
+    
+    this.destroy = function(){
+        if (!this.onIsland){
+            mapArray[this.x][this.y] = 0;
+        }
+    }
+    this.getDirection = function(){
+        return this.direction;
+    }
+    /*this.time = function(){
+        //Kill wind
+        this.wind.destroy();
+        this.timer.destroy();
+        windArray.splice(this.index,1);
+    }*/
+}
+function clickWind(){
+        this.direction += 1; if (this.direction > 4){this.direction = 1;}
+        this.wind.destroy();
+        if (this.direction == 1){this.wind = game.add.sprite(this.x*SCALE, this.y*SCALE, 'windLeft');}
+    if (this.direction == 2){this.wind = game.add.sprite(this.x*SCALE, this.y*SCALE, 'windUp');}
+    if (this.direction == 3){this.wind = game.add.sprite(this.x*SCALE, this.y*SCALE, 'windRight');}
+    if (this.direction == 4){this.wind = game.add.sprite(this.x*SCALE, this.y*SCALE, 'windDown');}
+    this.wind.inputEnabled = true;
+    this.wind.events.onInputDown.add(clickWind,this);
 }
 function preload() {
     
@@ -434,6 +478,12 @@ function preload() {
     game.load.image('beachLeftUpRight', 'assets/32/beachLeftUpRight.png');
     game.load.image('beachUpRightDown', 'assets/32/beachUpRightDown.png');
     game.load.image('beachRightDownLeft', 'assets/32/beachRightDownLeft.png');
+    game.load.image('coconut','assets/32/coconut.png');
+    game.load.image('windLeft','assets/32/windLeft.png');
+    game.load.image('windUp','assets/32/windUp.png');
+    game.load.image('windRight','assets/32/windRight.png');
+    game.load.image('windDown','assets/32/windDown.png');
+    game.load.image('windButton','assets/32/windButton.png');
 }
 
 
@@ -585,12 +635,13 @@ function phase1Timer(){
     phase1Time -= 1;
     if (phase1Time == 0){
         //Begin Phase 2 Here
+        enterPhase2();
     }
-    //text.setText("Time Remaining: " + phase1Time);
+    text.setText("Time Remaining: " + phase1Time);
 }
 function islandCreation(){
     text = game.add.text(5,5,"",{ font: "50px Arial", fill: '#ffffff', wordWrap: true, wordWrapWidth: 800 });
-    //text.setText("Time Remaining: " + phase1Time);
+    text.setText("Time Remaining: " + phase1Time);
     timer = game.time.create(true);
     timer.loop(500, pause, this);
     timer.start();
@@ -606,7 +657,6 @@ function gofull() {
 function update() {
     if (gameMode == 1){moveFire();}
     
-    
     if (game.input.activePointer.isUp && click){
         click = false;
         if(gameMode == 0){
@@ -617,18 +667,109 @@ function update() {
     if (game.input.activePointer.isDown){
         click = true;
     }
+    
     lavaFlows.forEach(function(element){
         element.update();
     })
-
     
-    
-    
+    if (gameMode == 3 || gameMode == 4){
+        
+    }
     this.game.scale.pageAlignHorizontally = true;this.game.scale.pageAlignVertically = true;this.game.scale.refresh();
     //changeMap(15,15,"5");
     //drawMap();
+
+}
+
+function phase2Time(){
+    windTime -= 1;
+    if (windTime ==0){
+        if (gameMode == 3){
+            windBuild();
+            windTime = 20;
+        }
+        else if (gameMode == 4){
+            windUse();
+            windTime = 5;
+        }
+    }
     
+    phase2Text();
+}
+function enterPhase2(){
+    eruptBar.destroy();
+    fire.destroy();
+    gameMode = 3;
+    windCount = 0;
+    windButton = game.add.sprite(450,800,'windButton');
+    windButton.inputEnabled = true;
+    windButton.events.onInputDown.add(windClick,this);
+    phase2Text();
+    //windTimerBuild = game.time.create(false);
+   // windTimerBuild.loop(windTime * 1000, windBuild, this);
+    //windTimerBuild.start();
+    timer = game.time.create(false);
+    timer.loop(1000, phase2Time, this);
+    timer.start();
+}
+
+function windBuild(){
+    gameMode = 4;
+   
+    windButton.destroy();
+    createWind();
+    //windTimerUse = game.time.create(false);
+    //windTimerUse.loop(windTime * 1000,windUse,this);
+    //windTimerUse.start();
+    //windTimerBuild.destroy();
+}
     
+function windUse(){
+    windArray.forEach(function(element){
+        element.destroy();
+        element.wind.destroy();
+    })
+    windArray = [];
+    windIndex = 0;
+    gameMode = 3;
+    windCount = 0;
+    
+    windButton = game.add.sprite(450,800,'windButton');
+    windButton.inputEnabled = true;
+    windButton.events.onInputDown.add(windClick,this);
+    //windTimerBuild = game.time.create(false);
+    //windTimerBuild.loop(windTime * 1000, windBuild, this);
+    //windTimerBuild.start();
+    //windTimerUse.destroy();
+}
+
+function windClick(){
+    windCount += 1;
+    var scale = (windCount +4) /5;
+    windButton.scale.setTo(scale,scale);
+    windButton.x -= scale;
+    windButton.y -= scale;
+    phase2Text();
+}
+
+function createWind(){
+    var rand = game.rnd.integerInRange(1,3);
+    for(i=0; i<rand; i++){
+        windArray[windIndex] = new Wind(windIndex,game);
+        windIndex++;
+    }
+    for(i=0; i<windCount/5; i++){
+        windArray[windIndex] = new Wind(windIndex,game);
+        windIndex++;
+    }
+}
+    
+function phase2Text(){
+    if(gameMode == 3){
+        text.setText("Time Remaining: " + windTime + " Wind Power: " + windCount);
+    }else if(gameMode == 4){
+        text.setText("Time Remaining: " + windTime);
+    }
 }
     
 /*********************************************************
