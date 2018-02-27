@@ -59,466 +59,17 @@ var windTimerUse;
 var windButton;
 var windCount;
 var windTime=5;
+var debrisArray = [];
+var debrisIndex = 0;
+var treeArray = [];
+var treeIndex = 0;
+var trashArray = [];
+var trashIndex = 0;
 var mapArray = createArray(30,30);
 var debug;
 var islandSize = 0;
 var narrator;
-    
-LavaFlow = function (index, start, intensity, game){
-    var x, y;
-    
-    this.index = index;
-    this.game = game;
-    this.last = 0;
-    this.start = start;
-    this.speed = 0;
-    this.intensity = intensity;
-    this.direction = "flowDown";
-    
-    if (start == 1){x=448;y=448;
-        if(mapArray[14][14] == 2){
-            volcanoes[0] = game.add.sprite(x, y, 'landVolcano');}}
-    else if (start == 2){x=480;y=448;
-        if(mapArray[15][14] == 2){
-            volcanoes[1] = game.add.sprite(x, y, 'landVolcano');}}
-    else if (start == 3){x=448;y=480;
-        if(mapArray[14][15] == 2){
-            volcanoes[2] = game.add.sprite(x, y, 'landVolcano');}}
-    else if (start == 4){x=480;y=480;
-        if(mapArray[15][15] == 2){
-            volcanoes[3] = game.add.sprite(x, y, 'landVolcano');}}
-    this.alive = true;
 
-    this.lava = game.add.sprite(x, y, 'lavaflow');
-    this.lava.animations.add('flowDown', [0,1,2], 6);
-    this.lava.animations.add('flowLeft',[3,4,5],6);
-    this.lava.animations.add('flowUp',[6,7,8],6);
-    this.lava.animations.add('flowRight',[9,10,11],6);
-    this.update = function(){
-        this.lava.bringToTop();
-        if (this.direction == "flowLeft"){this.lava.animations.play('flowLeft');}
-        else if (this.direction == "flowUp"){this.lava.animations.play('flowUp');}
-        else if (this.direction == "flowDown"){this.lava.animations.play('flowDown');}
-        else if (this.direction == "flowRight"){this.lava.animations.play('flowRight');}
-    }
-    this.checkLava = function(){
-        //Move lava in random direction
-        
-        var x = this.lava.x;
-        var y = this.lava.y;
-        var dir;
-        if (this.start == 1){ //Top Left
-            dir = game.rnd.integerInRange(1,2);
-            if (dir == 1){ //Move Left
-                x -= SCALE;
-                this.direction = "flowLeft";
-            }
-            else if(dir == 2){
-                y -= SCALE;
-                this.direction = "flowUp";
-            } //Move Up
-        }else if (this.start == 2){ //Top Right
-            dir = game.rnd.integerInRange(1,2);
-            if (dir == 1){
-                x += SCALE;
-                this.direction = "flowRight";
-            } //Move Right
-            else if(dir == 2){
-                y -= SCALE;
-                this.direction = "flowUp";
-            } //Move Up
-        }else if (this.start == 3){ //Bottom Left
-            dir = game.rnd.integerInRange(1,2);
-            if (dir == 1){
-                x -= SCALE;
-                this.direction = "flowLeft";
-            } //Move Left
-            else if(dir == 2){
-                y += SCALE;
-                this.direction = "flowDown";
-            } //Move Down
-        }else if (this.start == 4){ //Bottom Right
-            dir = game.rnd.integerInRange(1,2);
-            if (dir == 1){
-                x += SCALE;
-                this.direction = "flowRight";
-            } //Move Right
-            else if(dir == 2){
-                y += SCALE
-                this.direction = "flowDown";
-            } //Move Down
-        }
-        
-        var tween = this.game.add.tween(this.lava).to({x: x, y: y},500+this.speed, Phaser.Easing.Linear.None, true);
-        tween.onComplete.add(this.move, this);
-    }
-    this.move = function(){
-        //Move complete. Add logic to determine what tile is under lava
-        var tileX = this.lava.x /SCALE;
-        var tileY = this.lava.y /SCALE;
-        var mnt = game.rnd.integerInRange(1,100); //Random chance to create mountain
-        
-        //Increase chance of spawning mountain at higher intensity
-        if(this.intensity == 2){mnt -= 5;}
-        else if(this.intensity == 3){mnt -= 10;}
-        if(mapArray[tileX][tileY] == 0){ //no ground
-            checkTiles(tileX,tileY,"lava");
-            
-            islandSize +=1;
-            this.destroy();
-        
-        } else if (mapArray[tileX][tileY] == 1){
-            
-            if(this.speed >= 400 && mnt <= 10){
-                mapArray[tileX][tileY] = 3;
-                
-                game.add.sprite(this.lava.x,this.lava.y,'mountain');
-                this.destroy();
-            } else if (this.speed >= 300 && mnt <=5){
-                mapArray[tileX][tileY] = 3;
-                
-                game.add.sprite(this.lava.x,this.lava.y,'mountain');
-                this.destroy();
-            } else if (this.speed >= 200 && mnt <=3){
-                mapArray[tileX][tileY] = 3;
-                
-                game.add.sprite(this.lava.x,this.lava.y,'mountain');
-                this.destroy();
-            } else if (this.speed >= 100 && mnt <=1){
-                mapArray[tileX][tileY] = 3;
-                
-                game.add.sprite(this.lava.x,this.lava.y,'mountain');
-                this.destroy();
-            }else {this.checkLava();this.speed+= game.rnd.integerInRange(50,150);}
-            
-            
-        }else if(mapArray[tileX][tileY] == 4){
-            this.speed += 200;
-            this.checkLava();this.speed+= game.rnd.integerInRange(50,150);
-        }else {this.checkLava();this.speed+= game.rnd.integerInRange(50,150);}
-        if (this.speed >= 300){this.lava.tint = 0x808080;}
-        else if(this.speed >= 200){this.lava.tint = 0xA9A9A9;}
-        else if (this.speed >= 100){this.lava.tint = 0xBEBEBE;}
-        else if (this.speed >= 0){this.lava.tint = 0xF5F5F5;}
-    }
-    this.destroy = function(){
-        lavaFlows.splice(this.index, 1);
-        this.lava.destroy();
-        lavaCount -= 1;
-        if (lavaCount == 0){
-            lavaSpawned = false;
-        }
-    }
-
-};
-
-function checkTiles(x,y,source){
-    //mapArray[x][y]   = current tile
-    //mapArray[x-1][y] = left tile
-    //mapArray[x+1][y] = right tile
-    //mapArray[x][y-1] = upper tile
-    //mapArray[x][y+1] = lower tile
-    //RETURNS
-    //0 = water, 1 = grass, 2 = volcano, 3 = mountain
-    var goAhead = 0;
-    var water = 0;
-    if(mapArray[x-1][y] == 0){ water += 3}
-    if(mapArray[x][y-1] == 0){ water += 11}
-    if(mapArray[x+1][y] == 0){ water +=17}
-    if(mapArray[x][y+1] == 0){ water += 22}
-    if ((source == "grass" && mapArray[x][y] != 0 && mapArray[x][y] != 2 && mapArray[x][y] != 3) || source == "lava")
-    {
-        if (water == 0){
-            plantGrass(x,y);
-        }if (water == 3){
-            game.add.sprite(x*SCALE,y*SCALE,"beachLeft");
-            mapArray[x][y] = 1;
-        }if (water == 11){
-            game.add.sprite(x*SCALE,y*SCALE,"beachUp");
-            mapArray[x][y] = 1;
-        }if (water == 17){
-            game.add.sprite(x*SCALE,y*SCALE,"beachRight");
-            mapArray[x][y] = 1;
-        }if (water == 22){
-            game.add.sprite(x*SCALE,y*SCALE,"beachDown");
-            mapArray[x][y] = 1;
-        }if (water == 14){
-            game.add.sprite(x*SCALE,y*SCALE,"beachLeftUp");
-            mapArray[x][y] = 1;
-        }if (water == 28){
-            game.add.sprite(x*SCALE,y*SCALE,"beachUpRight");
-            mapArray[x][y] = 1;
-        }if (water == 39){
-            game.add.sprite(x*SCALE,y*SCALE,"beachRightDown");
-            mapArray[x][y] = 1;
-        }if (water == 25){
-            game.add.sprite(x*SCALE,y*SCALE,"beachDownLeft");
-            mapArray[x][y] = 1;
-        }if (water == 33){
-            game.add.sprite(x*SCALE,y*SCALE,"beachUpDown");
-            mapArray[x][y] = 1;
-        }if (water == 20){
-            game.add.sprite(x*SCALE,y*SCALE,"beachLeftRight");
-            mapArray[x][y] = 1;
-        }if (water == 31){
-            game.add.sprite(x*SCALE,y*SCALE,"beachLeftUpRight");
-            mapArray[x][y] = 1;
-        }if (water == 50){
-            game.add.sprite(x*SCALE,y*SCALE,"beachUpRightDown");
-            mapArray[x][y] = 1;
-        }if (water == 42){
-            game.add.sprite(x*SCALE,y*SCALE,"beachRightDownLeft");
-            mapArray[x][y] = 1;
-        }if (water == 36){
-            game.add.sprite(x*SCALE,y*SCALE,"beachDownLeftUp");
-            mapArray[x][y] = 1;
-        }
-    
-        if (source != "grass"){
-            checkTiles(x-1,y,"grass");
-            checkTiles(x,y-1,"grass");
-            checkTiles(x+1,y,"grass");
-            checkTiles(x,y+1,"grass");
-        }
-    }
-    /*if(source=="lava" || source =="grass"){
-        if(mapArray[x-1][y] == 0){ //left tile is water
-            if(mapArray[x][y-1] == 0){ //Left and top tile water
-                if(mapArray[x+1][y] == 0){ //left, top and right are water
-                    if ((source == "lava" && mapArray[x][y] == 0) || (source == "grass" && mapArray[x][y] == 1)){
-                        game.add.sprite(x*SCALE,y*SCALE,"beachLeftUpRight");
-                        mapArray[x][y] = 1;
-                        goAhead = 1;
-                    }
-                }
-                if (goAhead == 0){
-                    if ((source == "lava" && mapArray[x][y] == 0) || (source == "grass" && mapArray[x][y] == 1)){
-                        game.add.sprite(x*SCALE,y*SCALE,"beachLeftUp");
-                        mapArray[x][y] = 1;
-                        goAhead = 1;
-                    }
-                }
-            if (goAhead == 0){
-                if ((source == "lava" && mapArray[x][y] == 0) || (source == "grass" && mapArray[x][y] == 1)){
-                    game.add.sprite(x*SCALE,y*SCALE,"beachLeft");
-                    mapArray[x][y] = 1;
-                    goAhead = 1;
-                }
-            }
-            }
-        }
-        if (mapArray[x][y-1] == 0 && goAhead == 0){ //Top tile is water and this tile not chosen
-            if(mapArray[x+1][y] == 0){ //top and right tile water
-                if(mapArray[x][y+1] == 0){ //top,right,bottom are water
-                    if ((source == "lava" && mapArray[x][y] == 0) || (source == "grass" && mapArray[x][y] == 1)){
-                        game.add.sprite(x*SCALE,y*SCALE,"beachUpRightDown");
-                        mapArray[x][y] = 1;
-                        goAhead = 1;
-                    }
-                }
-                if (goAhead == 0){
-                    if ((source == "lava" && mapArray[x][y] == 0) || (source == "grass" && mapArray[x][y] == 1)){
-                        game.add.sprite(x*SCALE,y*SCALE,"beachUpRight");
-                        mapArray[x][y] = 1;
-                        goAhead = 1;
-                    }
-                }
-            if (goAhead == 0){
-                if ((source == "lava" && mapArray[x][y] == 0) || (source == "grass" && mapArray[x][y] == 1)){
-                    game.add.sprite(x*SCALE,y*SCALE,"beachUp");
-                    mapArray[x][y] = 1;
-                    goAhead = 1;
-                }
-            }
-            }
-        }
-        if (mapArray[x+1][y] == 0 && goAhead == 0){ //right tile is water and this tile not chosen
-            if(mapArray[x][y+1] == 0){ //right,down tile water
-                if(mapArray[x-1][y] == 0){ //right,bottom,left are water
-                    if ((source == "lava" && mapArray[x][y] == 0) || (source == "grass" && mapArray[x][y] == 1)){
-                        game.add.sprite(x*SCALE,y*SCALE,"beachRightDownLeft");
-                        mapArray[x][y] = 1;
-                        goAhead = 1;
-                    }
-                }
-                if (goAhead == 0){
-                    if ((source == "lava" && mapArray[x][y] == 0) || (source == "grass" && mapArray[x][y] == 1)){
-                        game.add.sprite(x*SCALE,y*SCALE,"beachRightDown");
-                        mapArray[x][y] = 1;
-                        goAhead = 1;
-                    }
-                }
-            if (goAhead == 0){
-                if ((source == "lava" && mapArray[x][y] == 0) || (source == "grass" && mapArray[x][y] == 1)){
-                    game.add.sprite(x*SCALE,y*SCALE,"beachRight");
-                    mapArray[x][y] = 1;
-                    goAhead = 1;
-                }
-            }
-            }
-        }
-        if (mapArray[x][y+1] == 0 && goAhead == 0){ //down tile is water and this tile not chosen
-            if(mapArray[x-1][y] == 0){ //down,left tile water
-                if(mapArray[x][y-1] == 0){ //bottom,left,top are water
-                    if ((source == "lava" && mapArray[x][y] == 0) || (source == "grass" && mapArray[x][y] == 1)){
-                        game.add.sprite(x*SCALE,y*SCALE,"beactDownLeftUp");
-                        mapArray[x][y] = 1;
-                        goAhead = 1;
-                    }
-                }
-                if (goAhead == 0){
-                    if ((source == "lava" && mapArray[x][y] == 0) || (source == "grass" && mapArray[x][y] == 1)){
-                        game.add.sprite(x*SCALE,y*SCALE,"beachDownLeft");
-                        mapArray[x][y] = 1;
-                        goAhead = 1;
-                    }
-                }
-            if (goAhead == 0){
-                if ((source == "lava" && mapArray[x][y] == 0) || (source == "grass" && mapArray[x][y] == 1)){
-                    game.add.sprite(x*SCALE,y*SCALE,"beachDown");
-                    mapArray[x][y] = 1;
-                    goAhead = 1;
-                }
-            }
-            }
-        }
-        if ((source == "lava" && goAhead == 0) || (source == "grass" && mapArray[x][y] != 0 && mapArray[x][y] != 2 && goAhead == 0)){ //no water\
-            plantGrass(x,y);
-            
-        }
-        if (source != "grass"){
-            text.setText("x: " + x + "y: " + y + " ");
-            checkTiles(x-1,y,"grass");
-            checkTiles(x,y-1,"grass");
-            checkTiles(x+1,y,"grass");
-            checkTiles(x,y+1,"grass");
-        }
-
-    }*/
-}
-function plantGrass(x,y){
-    var ground = game.rnd.integerInRange(1,100);
-    if (ground <=75){game.add.sprite(x*SCALE,y*SCALE,'ground');}
-    else if (ground >=76){game.add.sprite(x*SCALE,y*SCALE,'ground2');}
-    mapArray[x][y] = 1;
-}
-    
-Wind = function (index, game){
-    
-    this.index = index;
-    this.game = game;
-    this.last = 0;
-    this.speed = game.rnd.integerInRange(1000,2000);
-    this.onIsland = false;
-    this.noClick = false;
-    this.tween;
-    //this.timer = game.time.create(false);
-    //this.timer.loop(game.rnd.integerInRange(6000,20000), this.time, this);
-    //this.timer.start();
-    
-    this.x = game.rnd.integerInRange(2,28); //28
-    this.y = game.rnd.integerInRange(2,28);
-    this.checkTile = function(){
-        if (mapArray[this.x][this.y] == 0){
-            mapArray[this.x][this.y] = 4; 
-            this.onIsland = false;
-        }else{this.onIsland=true;}
-    }
-    this.checkTile();
-    this.direction = game.rnd.integerInRange(1,4);
-    this.wind = game.add.sprite(this.x*SCALE,this.y*SCALE,'wind');
-    this.wind.animations.add('down', [0,1,2], 6);
-    this.wind.animations.add('left',[3,4,5],6);
-    this.wind.animations.add('up',[6,7,8],6);
-    this.wind.animations.add('right',[9,10,11],6);
-    if (this.direction == 1){this.wind.animations.play('left');}
-    if (this.direction == 2){this.wind.animations.play('up');}
-    if (this.direction == 3){this.wind.animations.play('right');}
-    if (this.direction == 4){this.wind.animations.play('down');}
-    this.wind.inputEnabled = true;
-    this.wind.events.onInputDown.add(clickWind,this);
-    
-    this.destroy = function(){
-        if (!this.onIsland){
-            mapArray[this.x][this.y] = 0;
-        }
-    }
-    this.update = function(){
-        if (this.direction == 1){this.wind.animations.play('left');}
-        if (this.direction == 2){this.wind.animations.play('up');}
-        if (this.direction == 3){this.wind.animations.play('right');}
-        if (this.direction == 4){this.wind.animations.play('down');}
-        this.move();
-    }
-    this.moved = function(){
-        this.noClick = false;
-    }
-    this.move = function(){
-        if (game.rnd.integerInRange(1,1000) <= 500){
-            if (this.direction == 1 && this.x >= 1){
-                this.noClick = true;
-                this.tween = game.add.tween(this.wind).to({x: (this.x -1)*SCALE},this.speed, Phaser.Easing.Linear.None, true);
-                this.tween.onComplete.add(this.moved, this);
-                if (!this.onIsland){mapArray[this.x][this.y] == 0}
-                this.x -= 1;
-                this.checkTile();
-            }else if(this.x <1 && this.direction == 1){
-                this.destroy()
-                this.wind.destroy()
-                windArray.splice(this.index,1);
-            }
-            else if (this.direction == 2 && this.y >= 1){
-                this.noClick = true;
-                this.tween = game.add.tween(this.wind).to({y: (this.y -1)*SCALE},this.speed, Phaser.Easing.Linear.None, true);
-                this.tween.onComplete.add(this.moved, this);
-                if (!this.onIsland){mapArray[this.x][this.y] == 0}
-                this.y -= 1;
-                this.checkTile();
-            }else if(this.y <1 && this.direction ==2){
-                this.destroy()
-                this.wind.destroy()
-                windArray.splice(this.index,1);
-            }
-            else if (this.direction == 3 && this.x <= 28){
-                this.noClick = true;
-                this.tween = game.add.tween(this.wind).to({x: (this.x +1)*SCALE},this.speed, Phaser.Easing.Linear.None, true);
-                this.tween.onComplete.add(this.moved, this);
-                if (!this.onIsland){mapArray[this.x][this.y] == 0}
-                this.x += 1;
-                this.checkTile();
-            }else if(this.x >29 && this.direction == 3){
-                this.destroy()
-                this.wind.destroy()
-                windArray.splice(this.index,1);
-            }
-            else if (this.direction == 4 && this.y <= 28){
-                this.noClick = true;
-                this.tween = game.add.tween(this.wind).to({y: (this.y +1)*SCALE},this.speed, Phaser.Easing.Linear.None, true);
-                this.tween.onComplete.add(this.moved, this);
-                if (!this.onIsland){mapArray[this.x][this.y] == 0}
-                this.y += 1;
-                this.checkTile();
-            }else if(this.y >29 && this.direction == 4){
-                this.destroy()
-                this.wind.destroy()
-                windArray.splice(this.index,1);
-            }
-        }
-    }
-    
-    this.getDirection = function(){
-        return this.direction;
-    }
-    this.clickWind = function(){
-        
-    }
-}
-
-function clickWind(){
-    if (!this.noClick){
-        this.direction += 1; if (this.direction > 4){this.direction = 1;}
-    }
-}
 function preload() {
     
 
@@ -548,6 +99,7 @@ function preload() {
     game.load.image('beachUpRightDown', 'assets/32/beachUpRightDown.png');
     game.load.image('beachRightDownLeft', 'assets/32/beachRightDownLeft.png');
     game.load.image('coconut','assets/32/coconut.png');
+    game.load.image('trash','assets/32/coconut.png');
     game.load.image('windLeft','assets/32/windLeft.png');
     game.load.image('windUp','assets/32/windUp.png');
     game.load.image('windRight','assets/32/windRight.png');
@@ -632,6 +184,47 @@ function create() {
     
     intro();
 }
+function gofull() {
+
+    game.scale.startFullScreen();
+
+}
+
+function update() {
+    if (gameMode == 1){moveFire();}
+    
+    if (game.input.activePointer.isUp && click){
+        click = false;
+        if(gameMode == 0 || gameMode == 2){
+            updateText(1);
+        }
+        if(gameMode ==1 && phase1Time > 0){erupt();}
+    }
+    if (game.input.activePointer.isDown){
+        click = true;
+    }
+    
+    lavaFlows.forEach(function(element){
+        element.update();
+    })
+    
+    if (gameMode == 4){
+        windArray.forEach(function(element){
+            element.update();
+        })
+        debrisArray.forEach(function(element){
+            element.update();
+        })
+    }
+    this.game.scale.pageAlignHorizontally = true;this.game.scale.pageAlignVertically = true;this.game.scale.refresh();
+    //changeMap(15,15,"5");
+    //drawMap();
+
+}
+
+    /////////////////////////////////
+//////////////NARRATOR LOGIC////////////
+    ////////////////////////////////
 function intro(){
     
     timer = game.time.create(false);
@@ -688,6 +281,23 @@ function updateText(signal){
     text.setText(narration1);
     
 }
+    /////////////////////////////////
+//////////////END NARRATOR LOGIC////////////
+    ////////////////////////////////
+    
+        /////////////////////////////////
+//////////////PHASE 1 LOGIC////////////
+    ////////////////////////////////
+    
+function islandCreation(){
+    //Setup pause timer for delay before loading game
+    text.setText("Time Remaining: " + phase1Time);
+    timer = game.time.create(true);
+    timer.loop(500, pause, this);
+    timer.start();
+    
+}
+
 function pause(){
     //slight delay to allow game to load after intro
     gameMode = 1;
@@ -711,11 +321,14 @@ function pause(){
     timer.start();
 }
 function phase1Timer(){
+    //Keeps track of time remaining in phase 1 and handles transition to phase 2
     phase1Time -= 1;
-    if (phase1Time <= 0 && lavaCount == 0){
+    if (phase1Time <= 0 && lavaCount == 0){ //make sure no lava is still flowing before entering phase 2
         //Begin Phase 2 Here
         gameMode = 2;
         NARRATION1 = "As the lava cooled, the winds picked up, pulling debris towards the newly formed land.";
+        eruptBar.destroy();
+        fire.destroy();
         timer.destroy();
         text.destroy();
         intro();
@@ -723,49 +336,311 @@ function phase1Timer(){
     if(phase1Time >= 0){text.setText("Time Remaining: " + phase1Time);}
 
 }
-function islandCreation(){
-    text.setText("Time Remaining: " + phase1Time);
-    timer = game.time.create(true);
-    timer.loop(500, pause, this);
-    timer.start();
+
+function erupt(){
+    //Erupt volcanoes based on fire location when clicked
+    var picked = []; //gets assigned and passed directly to lava start location with lavaStart function
+    if (!lavaSpawned){
+    if(fire.x >= 3 && fire.x <= 240){
+        lavaCount = 1;
+        lavaFlows[lavaIndex] = new LavaFlow(lavaIndex,picked[0]=lavaStart(picked),1,game) ;
+        lavaFlows[lavaIndex].checkLava();
+        lavaIndex +=1;
+    }else if(fire.x >= 241 && fire.x <= 660){
+        lavaCount = 2;
+        lavaFlows[lavaIndex] = new LavaFlow(lavaIndex,picked[0]=lavaStart(picked),2,game) ;
+        lavaFlows[lavaIndex].checkLava();
+        lavaIndex +=1;
+        lavaFlows[lavaIndex] = new LavaFlow(lavaIndex,picked[1]=lavaStart(picked),2,game) ;
+        lavaFlows[lavaIndex].checkLava();
+        lavaIndex +=1;
+    }else if(fire.x >= 661){
+        lavaCount = 3;
+        lavaFlows[lavaIndex] = new LavaFlow(lavaIndex,picked[0]=lavaStart(picked),3,game) ;
+        lavaFlows[lavaIndex].checkLava();
+        lavaIndex +=1;
+        lavaFlows[lavaIndex] = new LavaFlow(lavaIndex,picked[1]=lavaStart(picked),3,game) ;
+        lavaFlows[lavaIndex].checkLava();
+        lavaIndex +=1;
+        lavaFlows[lavaIndex] = new LavaFlow(lavaIndex,picked[2]=lavaStart(picked),3,game) ;
+        lavaFlows[lavaIndex].checkLava();
+        lavaIndex +=1;
+    }
+        
     
+    }
+    lavaSpawned = true;
 }
+function moveFire(){
+    //Moves fire sprite back and forth along erupt bar
+    if (fire.x == 896)
+        {
+            game.add.tween(fire).to({x: 6}, 1000 , Phaser.Easing.Out, true);
 
-function gofull() {
-
-    game.scale.startFullScreen();
-
-}
-
-function update() {
-    if (gameMode == 1){moveFire();}
-    
-    if (game.input.activePointer.isUp && click){
-        click = false;
-        if(gameMode == 0 || gameMode == 2){
-            updateText(1);
         }
-        if(gameMode ==1 && phase1Time > 0){erupt();}
-    }
-    if (game.input.activePointer.isDown){
-        click = true;
-    }
-    
-    lavaFlows.forEach(function(element){
-        element.update();
-    })
-    
-    if (gameMode == 4){
-        windArray.forEach(function(element){
-            element.update();
-        })
-    }
-    this.game.scale.pageAlignHorizontally = true;this.game.scale.pageAlignVertically = true;this.game.scale.refresh();
-    //changeMap(15,15,"5");
-    //drawMap();
+    else if (fire.x == 6)
+        {
+            game.add.tween(fire).to({x: 896}, 1000 , Phaser.Easing.Out, true);
 
+        }
 }
+function lavaStart(lavas){
+    //Set unique lava start location so they can't spawn on same volcano
+    var picked;
+    var start;
+    do{
+        picked = false;
+        start = game.rnd.integerInRange(1, 4);
+        lavas.forEach(function(element){
+            if(element == start){picked = true;}
+        }) 
+    } while(picked);
+    
+    return start;
+}
+LavaFlow = function (index, start, intensity, game){
+    //Object constructor for lava
+    var x, y;
+    
+    this.index = index; //used to add and remove from lavaFlows array
+    this.game = game;
+    this.start = start; //which volcano the lava starts from
+    this.speed = 0; //how quickly the lava moves, inverse values: higher = slower
+    this.intensity = intensity; //based on the eruption intensity when created, higher intensity gives higher chance to spawn mountains
+    this.direction = "flowDown";
+    
+    //create land under volcanoes when lava is spawned on top of them
+    if (start == 1){
+        x=448;y=448;
+        volcanoes[0] = game.add.sprite(x, y, 'landVolcano');
+    }else if (start == 2){
+        x=480;y=448;
+        volcanoes[1] = game.add.sprite(x, y, 'landVolcano');
+    }else if (start == 3){
+        x=448;y=480;
+        volcanoes[2] = game.add.sprite(x, y, 'landVolcano');
+    }else if (start == 4){
+        x=480;y=480;
+        volcanoes[3] = game.add.sprite(x, y, 'landVolcano');}
+    this.alive = true;
+    
+    //Create the sprite to display and animations
+    this.lava = game.add.sprite(x, y, 'lavaflow');
+    this.lava.animations.add('flowDown', [0,1,2], 6);
+    this.lava.animations.add('flowLeft',[3,4,5],6);
+    this.lava.animations.add('flowUp',[6,7,8],6);
+    this.lava.animations.add('flowRight',[9,10,11],6);
+    
+    this.update = function(){
+        this.lava.bringToTop(); //Ensures lava stays over land created
+        //Change animation based on direction
+        if (this.direction == "flowLeft"){this.lava.animations.play('flowLeft');}
+        else if (this.direction == "flowUp"){this.lava.animations.play('flowUp');}
+        else if (this.direction == "flowDown"){this.lava.animations.play('flowDown');}
+        else if (this.direction == "flowRight"){this.lava.animations.play('flowRight');}
+    }
+    this.checkLava = function(){
+        //Move lava in random direction based on starting location
+        
+        var x = this.lava.x;
+        var y = this.lava.y;
+        var dir;
+        if (this.start == 1){ //Top Left
+            dir = game.rnd.integerInRange(1,2);
+            if (dir == 1){ //Move Left
+                x -= SCALE;
+                this.direction = "flowLeft";
+            }
+            else if(dir == 2){
+                y -= SCALE;
+                this.direction = "flowUp";
+            } //Move Up
+        }else if (this.start == 2){ //Top Right
+            dir = game.rnd.integerInRange(1,2);
+            if (dir == 1){
+                x += SCALE;
+                this.direction = "flowRight";
+            } //Move Right
+            else if(dir == 2){
+                y -= SCALE;
+                this.direction = "flowUp";
+            } //Move Up
+        }else if (this.start == 3){ //Bottom Left
+            dir = game.rnd.integerInRange(1,2);
+            if (dir == 1){
+                x -= SCALE;
+                this.direction = "flowLeft";
+            } //Move Left
+            else if(dir == 2){
+                y += SCALE;
+                this.direction = "flowDown";
+            } //Move Down
+        }else if (this.start == 4){ //Bottom Right
+            dir = game.rnd.integerInRange(1,2);
+            if (dir == 1){
+                x += SCALE;
+                this.direction = "flowRight";
+            } //Move Right
+            else if(dir == 2){
+                y += SCALE
+                this.direction = "flowDown";
+            } //Move Down
+        }
+        
+        //Move the lava, taking its speed into account
+        var tween = this.game.add.tween(this.lava).to({x: x, y: y},500+this.speed, Phaser.Easing.Linear.None, true);
+        //Call function this.move() when lava has finished moving
+        tween.onComplete.add(this.move, this);
+    }
+    this.move = function(){
+        //Move complete. Logic to determine what tile is under lava and where to go from there
+        var tileX = this.lava.x /SCALE; //get array X from literal X
+        var tileY = this.lava.y /SCALE; //get array Y from literal Y
+        var mnt = game.rnd.integerInRange(1,100); //Random chance to create mountain
+        
+        //Increase chance of spawning mountain at higher intensity
+        if(this.intensity == 2){mnt -= 5;}
+        else if(this.intensity == 3){mnt -= 10;}
+        if(mapArray[tileX][tileY] == 0){ //no ground
+            checkTiles(tileX,tileY,"lava");
+            
+            islandSize +=1;
+            this.destroy();
+        
+        } else if (mapArray[tileX][tileY] == 1){ //moved over land
+            //Logic for creating mountains. The longer a lava is on land, the higher its speed and this the higher chance of creating a mountain
+            if(this.speed >= 400 && mnt <= 10){
+                mapArray[tileX][tileY] = 3;
+                
+                game.add.sprite(this.lava.x,this.lava.y,'mountain');
+                this.destroy();
+            } else if (this.speed >= 300 && mnt <=5){
+                mapArray[tileX][tileY] = 3;
+                
+                game.add.sprite(this.lava.x,this.lava.y,'mountain');
+                this.destroy();
+            } else if (this.speed >= 200 && mnt <=3){
+                mapArray[tileX][tileY] = 3;
+                
+                game.add.sprite(this.lava.x,this.lava.y,'mountain');
+                this.destroy();
+            } else if (this.speed >= 100 && mnt <=1){
+                mapArray[tileX][tileY] = 3;
+                
+                game.add.sprite(this.lava.x,this.lava.y,'mountain');
+                this.destroy();
+            }else {this.checkLava();this.speed+= game.rnd.integerInRange(50,150);}
+            
+            
+        }else if(mapArray[tileX][tileY] == 3){//if lava flows over mountain, slow it down
+            this.speed += 200;
+            this.checkLava();
+            this.speed += game.rnd.integerInRange(50,150);
+        }else { //if no mountain is created, and didn't hit water, slow lava and move again
+            this.checkLava();
+            this.speed+= game.rnd.integerInRange(50,150);}
+        //Logic for darkening lava as it slows
+        if (this.speed >= 300){this.lava.tint = 0x808080;}
+        else if(this.speed >= 200){this.lava.tint = 0xA9A9A9;}
+        else if (this.speed >= 100){this.lava.tint = 0xBEBEBE;}
+        else if (this.speed >= 0){this.lava.tint = 0xF5F5F5;}
+    }
+    this.destroy = function(){
+        lavaFlows.splice(this.index, 1); //remove this object from the lavaFlows array
+        this.lava.destroy(); //destroy the sprite so it no longer draws
+        //Logic to handle whether new lava can be spawned yet
+        lavaCount -= 1; 
+        if (lavaCount == 0){
+            lavaSpawned = false;
+        }
+    }
 
+};
+
+function checkTiles(x,y,source){
+    //Build beaches based on adjacent tiles
+    //mapArray[x][y]   = current tile
+    //mapArray[x-1][y] = left tile
+    //mapArray[x+1][y] = right tile
+    //mapArray[x][y-1] = upper tile
+    //mapArray[x][y+1] = lower tile
+    //Array Values
+    //0 = water, 1 = grass, 2 = volcano, 3 = mountain
+    var water = 0; //used to check which tiles surrounding the current tile are water. incremented by a unique value for each direction such that no sums overlap
+    if(mapArray[x-1][y] == 0){ water += 3} //add 3 if the tile left of this is water
+    if(mapArray[x][y-1] == 0){ water += 11} //add 11 if the tile above this is water
+    if(mapArray[x+1][y] == 0){ water += 17} //add 17 if the tile right of this is water
+    if(mapArray[x][y+1] == 0){ water += 22} //add 22 if the tile below this is water
+    if ((source == "grass" && mapArray[x][y] != 0 && mapArray[x][y] != 2 && mapArray[x][y] != 3) || source == "lava")
+    {
+        if (water == 0){
+            plantGrass(x,y);
+        }if (water == 3){
+            game.add.sprite(x*SCALE,y*SCALE,"beachLeft");
+            mapArray[x][y] = 1;
+        }if (water == 11){
+            game.add.sprite(x*SCALE,y*SCALE,"beachUp");
+            mapArray[x][y] = 1;
+        }if (water == 17){
+            game.add.sprite(x*SCALE,y*SCALE,"beachRight");
+            mapArray[x][y] = 1;
+        }if (water == 22){
+            game.add.sprite(x*SCALE,y*SCALE,"beachDown");
+            mapArray[x][y] = 1;
+        }if (water == 14){
+            game.add.sprite(x*SCALE,y*SCALE,"beachLeftUp");
+            mapArray[x][y] = 1;
+        }if (water == 28){
+            game.add.sprite(x*SCALE,y*SCALE,"beachUpRight");
+            mapArray[x][y] = 1;
+        }if (water == 39){
+            game.add.sprite(x*SCALE,y*SCALE,"beachRightDown");
+            mapArray[x][y] = 1;
+        }if (water == 25){
+            game.add.sprite(x*SCALE,y*SCALE,"beachDownLeft");
+            mapArray[x][y] = 1;
+        }if (water == 33){
+            game.add.sprite(x*SCALE,y*SCALE,"beachUpDown");
+            mapArray[x][y] = 1;
+        }if (water == 20){
+            game.add.sprite(x*SCALE,y*SCALE,"beachLeftRight");
+            mapArray[x][y] = 1;
+        }if (water == 31){
+            game.add.sprite(x*SCALE,y*SCALE,"beachLeftUpRight");
+            mapArray[x][y] = 1;
+        }if (water == 50){
+            game.add.sprite(x*SCALE,y*SCALE,"beachUpRightDown");
+            mapArray[x][y] = 1;
+        }if (water == 42){
+            game.add.sprite(x*SCALE,y*SCALE,"beachRightDownLeft");
+            mapArray[x][y] = 1;
+        }if (water == 36){
+            game.add.sprite(x*SCALE,y*SCALE,"beachDownLeftUp");
+            mapArray[x][y] = 1;
+        }
+        //Once lava has created its beach, check the 4 tiles adjacent to update their beaches based on the newly formed land
+        if (source != "grass"){
+            checkTiles(x-1,y,"grass");
+            checkTiles(x,y-1,"grass");
+            checkTiles(x+1,y,"grass");
+            checkTiles(x,y+1,"grass");
+        }
+    }
+}
+function plantGrass(x,y){
+    //Create basic land if no water is surrounding the tile
+    var ground = game.rnd.integerInRange(1,100);
+    if (ground <=75){game.add.sprite(x*SCALE,y*SCALE,'ground');}
+    else if (ground >=76){game.add.sprite(x*SCALE,y*SCALE,'ground2');}
+    mapArray[x][y] = 1;
+}
+    /////////////////////////////////
+//////////////END PHASE 1 LOGIC////////////
+    ////////////////////////////////
+
+    /////////////////////////////////
+//////////////PHASE 2 LOGIC////////////
+    ////////////////////////////////
 function phase2Time(){
     windTime -= 1;
     if (windTime ==0){
@@ -782,8 +657,7 @@ function phase2Time(){
     phase2Text();
 }
 function enterPhase2(){
-    eruptBar.destroy();
-    fire.destroy();
+    
     gameMode = 3;
     windCount = 0;
     windButton = game.add.sprite(470,800,'windButton');
@@ -855,6 +729,12 @@ function createWind(){
         windArray[windIndex] = new Wind(windIndex,game);
         windIndex++;
     }
+    rand = game.rnd.integerInRange(6,12);
+    for(i=0;i<rand;i++){
+        debrisArray[debrisIndex] = new Debris(debrisIndex,game);
+        debrisArray[debrisIndex].move();
+        debrisIndex++;
+    }
 }
     
 function phase2Text(){
@@ -864,6 +744,262 @@ function phase2Text(){
         text.setText("Time Remaining: " + windTime);
     }
 }
+Wind = function (index, game){
+    
+    this.index = index;
+    this.game = game;
+    this.speed = game.rnd.integerInRange(100,200);
+    this.onIsland = false;
+    this.noClick = false;
+    this.tween;
+    
+    this.x = game.rnd.integerInRange(2,28); //28
+    this.y = game.rnd.integerInRange(2,28);
+    this.checkTile = function(){
+        if (mapArray[this.x][this.y] == 0){
+            mapArray[this.x][this.y] = 4; 
+            this.onIsland = false;
+        }else{this.onIsland=true;}
+    }
+    this.checkTile();
+    this.direction = game.rnd.integerInRange(1,4);
+    this.wind = game.add.sprite(this.x*SCALE,this.y*SCALE,'wind');
+    this.wind.animations.add('down', [0,1,2], 6);
+    this.wind.animations.add('left',[3,4,5],6);
+    this.wind.animations.add('up',[6,7,8],6);
+    this.wind.animations.add('right',[9,10,11],6);
+    if (this.direction == 1){this.wind.animations.play('left');}
+    if (this.direction == 2){this.wind.animations.play('up');}
+    if (this.direction == 3){this.wind.animations.play('right');}
+    if (this.direction == 4){this.wind.animations.play('down');}
+    this.wind.inputEnabled = true;
+    this.wind.events.onInputDown.add(clickWind,this);
+    
+    this.destroy = function(){
+        if (!this.onIsland){
+            mapArray[this.x][this.y] = 0;
+        }
+    }
+    this.update = function(){
+        if (this.direction == 1){this.wind.animations.play('left');}
+        if (this.direction == 2){this.wind.animations.play('up');}
+        if (this.direction == 3){this.wind.animations.play('right');}
+        if (this.direction == 4){this.wind.animations.play('down');}
+        this.move();
+    }
+    this.moved = function(){
+        this.noClick = false;
+    }
+    this.move = function(){
+        if (game.rnd.integerInRange(1,1000) <= 1){
+            if (this.direction == 1 && this.x >= 1){
+                this.noClick = true;
+                this.tween = game.add.tween(this.wind).to({x: (this.x -1)*SCALE},this.speed, Phaser.Easing.Linear.None, true);
+                this.tween.onComplete.add(this.moved, this);
+                if (!this.onIsland){mapArray[this.x][this.y] == 0}
+                this.x -= 1;
+                this.checkTile();
+            }else if(this.x <1 && this.direction == 1){
+                this.destroy()
+                this.wind.destroy()
+                windArray.splice(this.index,1);
+            }
+            else if (this.direction == 2 && this.y >= 1){
+                this.noClick = true;
+                this.tween = game.add.tween(this.wind).to({y: (this.y -1)*SCALE},this.speed, Phaser.Easing.Linear.None, true);
+                this.tween.onComplete.add(this.moved, this);
+                if (!this.onIsland){mapArray[this.x][this.y] == 0}
+                this.y -= 1;
+                this.checkTile();
+            }else if(this.y <1 && this.direction ==2){
+                this.destroy()
+                this.wind.destroy()
+                windArray.splice(this.index,1);
+            }
+            else if (this.direction == 3 && this.x <= 28){
+                this.noClick = true;
+                this.tween = game.add.tween(this.wind).to({x: (this.x +1)*SCALE},this.speed, Phaser.Easing.Linear.None, true);
+                this.tween.onComplete.add(this.moved, this);
+                if (!this.onIsland){mapArray[this.x][this.y] == 0}
+                this.x += 1;
+                this.checkTile();
+            }else if(this.x >28 && this.direction == 3){
+                this.destroy()
+                this.wind.destroy()
+                windArray.splice(this.index,1);
+            }
+            else if (this.direction == 4 && this.y <= 28){
+                this.noClick = true;
+                this.tween = game.add.tween(this.wind).to({y: (this.y +1)*SCALE},this.speed, Phaser.Easing.Linear.None, true);
+                this.tween.onComplete.add(this.moved, this);
+                if (!this.onIsland){mapArray[this.x][this.y] == 0}
+                this.y += 1;
+                this.checkTile();
+            }else if(this.y >28 && this.direction == 4){
+                this.destroy()
+                this.wind.destroy()
+                windArray.splice(this.index,1);
+            }
+        }
+    }
+    
+    this.getDirection = function(){
+        return this.direction;
+    }
+    this.clickWind = function(){
+        
+    }
+}
+
+function clickWind(){
+    if (!this.noClick){
+        this.direction += 1; if (this.direction > 4){this.direction = 1;}
+    }
+}
+    
+Debris = function (index, game){
+    
+    this.index = index;
+    this.game = game;
+    this.speed = game.rnd.integerInRange(700,1000);
+    this.onIsland = false;
+    this.tween;
+    this.direction = 0;
+    this.canMove = true;
+    this.timer;
+    this.type = '';
+    var side = game.rnd.integerInRange(1,4);//pick a side from which to spawn
+    if (side == 1){//left
+        this.x = 0;
+        this.y = game.rnd.integerInRange(0,29);
+        this.direction = game.rnd.integerInRange(1,4);
+        if(this.direction == 1){this.direction = 3;}
+    }else if (side == 2){//Top
+        this.x = game.rnd.integerInRange(0,29);
+        this.y = 0;
+        this.direction = game.rnd.integerInRange(1,4);
+        if(this.direction == 2){this.direction = 4;}
+    }else if (side == 3){//Right
+        this.x = 29;
+        this.y = game.rnd.integerInRange(0,29);
+        this.direction = game.rnd.integerInRange(1,4);
+        if(this.direction == 3){this.direction = 4;}
+    }else if (side == 4){//Bottom
+        this.x = game.rnd.integerInRange(0,29);
+        this.y = 29;
+        this.direction = game.rnd.integerInRange(1,4);
+        if(this.direction == 4){this.direction = 2;}
+    }
+    if (game.rnd.integerInRange(1,100) <=50){
+        this.debris = game.add.sprite(this.x*SCALE,this.y*SCALE,'coconut');
+        this.type = 'coconut';
+    }else{this.debris = game.add.sprite(this.x*SCALE,this.y*SCALE,'trash');
+         this.type = 'trash';}
+    this.timer = game.time.create(false);
+    
+    this.update = function(){
+        if (this.canMove){
+            //this.move();
+            
+        }
+        
+    }
+    this.moved = function(){
+        //Check for wind or island
+        //this.timer.destroy();
+        if (mapArray[this.x][this.y] == 4){ //hit Wind
+            windArray.forEach(function(element){
+                if(element.x == this.x && element.y == this.y){
+                    this.speed -= element.speed;
+                    this.direction = element.direction;
+                    
+                }
+            })
+        }else if(mapArray[this.x][this.y] == 1 || mapArray[this.x][this.y] == 5){// hit land
+            plantTree(this.x,this.y, this.type);
+            this.destroy();
+        }
+        
+        this.canMove = true;
+        this.move();
+    }
+    this.move = function(){
+        this.canMove = false;
+        //var tween;
+        if (this.speed <= 100){this.speed = 100;}
+        if(this.direction == 1 && this.x >=1){//left
+            this.tween = this.game.add.tween(this.debris).to({x: (this.x - 1)*SCALE},this.speed, Phaser.Easing.Linear.None, true);
+            this.tween.onComplete.add(this.moved,this);
+            console.log("move left");
+        }else if(this.x <1 && this.direction == 1){
+            this.destroy();
+        }
+        else if(this.direction == 2 && this.y >=1){//up
+            this.tween = this.game.add.tween(this.debris).to({y: (this.y - 1)*SCALE},this.speed, Phaser.Easing.Linear.None, true);
+            this.tween.onComplete.add(this.moved,this);
+            console.log("move up");
+        }else if(this.y <1 && this.direction == 2){
+            this.destroy();
+        }
+        else if(this.direction == 3 && this.x <= 28){//right
+            this.tween = game.add.tween(this.debris).to({x: (this.x + 1)*SCALE},this.speed, Phaser.Easing.Linear.None, true);
+            this.tween.onComplete.add(this.moved,this);
+            console.log("move right");
+        }else if(this.x >28 && this.direction == 3){
+            this.destroy();
+        }
+        else if(this.direction == 4 && this.y <= 28){//down
+            this.tween = game.add.tween(this.debris).to({y: (this.y + 1)*SCALE},this.speed, Phaser.Easing.Linear.None, true);
+            this.tween.onComplete.add(this.moved,this);
+            console.log("move down");
+        }else if(this.y >28 && this.direction == 4){
+            this.destroy();
+        }
+        //this.timer = game.time.create(false);
+        //this.timer.loop(1000, function() {this.moved();}, this);
+        //this.timer.start();
+    }
+    this.destroy = function(){
+        this.debris.destroy();
+        debrisArray.splice(this.index,1);
+    }
+    
+}
+
+function plantTree(x,y,type){
+    if (mapArray[x][y] == 1){//plant tree here
+        if (type == 'coconut'){
+            mapArray[x][y] == 5;
+            treeArray[treeIndex] = game.add.sprite(x*SCALE,y*SCALE, 'tree');
+            treeIndex ++;
+        }else if (type == 'trash'){
+            mapArray[x][y] == 6;
+            trashArray[trashIndex] = game.add.sprite(x*SCALE,y*SCALE, 'trashPile');
+            trashIndex ++;
+        }
+    }else if(mapArray[x][y] == 5){//plant tree in an adjacent square
+        if(mapArray[x-1][y] == 1){//plant tree on left tile
+            mapArray[x-1][y] == 5;
+            treeArray[treeIndex] = game.add.sprite((x-1)*SCALE,y*SCALE);
+            treeIndex ++;
+        }else if(mapArray[x][y-1] == 1){//plant tree above
+            mapArray[x][y-1] == 5;
+            treeArray[treeIndex] = game.add.sprite(x*SCALE,(y-1)*SCALE);
+            treeIndex ++;
+        }else if(mapArray[x+1][y] == 1){//plant tree on right tile
+            mapArray[x+1][y] == 5;
+            treeArray[treeIndex] = game.add.sprite((x+1)*SCALE,y*SCALE);
+            treeIndex ++;
+        }else if(mapArray[x][y+1] == 1){//plant tree below
+            mapArray[x][y+1] == 5;
+            treeArray[treeIndex] = game.add.sprite(x*SCALE,(y+1)*SCALE);
+            treeIndex ++;
+        }
+    }
+}
+    /////////////////////////////////
+//////////////END PHASE 2 LOGIC////////////
+    ////////////////////////////////
     
 /*********************************************************
 borrowed code from stackoverflow for creating n-dimension array
@@ -903,66 +1039,7 @@ function drawMap(){
     
     
 }
-function erupt(){
-    var picked = [];
-    if (!lavaSpawned){
-    if(fire.x >= 3 && fire.x <= 240){
-        //alert(picked[0]);
-        lavaCount = 1;
-        lavaFlows[lavaIndex] = new LavaFlow(lavaIndex,picked[0]=lavaStart(picked),1,game) ;
-        lavaFlows[lavaIndex].checkLava();
-        lavaIndex +=1;
-    }else if(fire.x >= 241 && fire.x <= 660){
-        lavaCount = 2;
-        lavaFlows[lavaIndex] = new LavaFlow(lavaIndex,picked[0]=lavaStart(picked),2,game) ;
-        lavaFlows[lavaIndex].checkLava();
-        lavaIndex +=1;
-        lavaFlows[lavaIndex] = new LavaFlow(lavaIndex,picked[1]=lavaStart(picked),2,game) ;
-        lavaFlows[lavaIndex].checkLava();
-        lavaIndex +=1;
-    }else if(fire.x >= 661){
-        lavaCount = 3;
-        lavaFlows[lavaIndex] = new LavaFlow(lavaIndex,picked[0]=lavaStart(picked),3,game) ;
-        lavaFlows[lavaIndex].checkLava();
-        lavaIndex +=1;
-        lavaFlows[lavaIndex] = new LavaFlow(lavaIndex,picked[1]=lavaStart(picked),3,game) ;
-        lavaFlows[lavaIndex].checkLava();
-        lavaIndex +=1;
-        lavaFlows[lavaIndex] = new LavaFlow(lavaIndex,picked[2]=lavaStart(picked),3,game) ;
-        lavaFlows[lavaIndex].checkLava();
-        lavaIndex +=1;
-    }
-        
-    
-    }
-    lavaSpawned = true;
-}
-function moveFire(){
-    if (fire.x == 896)
-        {
-            game.add.tween(fire).to({x: 6}, 1000 , Phaser.Easing.Out, true);
 
-        }
-    else if (fire.x == 6)
-        {
-            game.add.tween(fire).to({x: 896}, 1000 , Phaser.Easing.Out, true);
-
-        }
-}
-function lavaStart(lavas){
-    //Set unique lava start location
-    var picked;
-    var start;
-    do{
-        picked = false;
-        start = game.rnd.integerInRange(1, 4);
-        lavas.forEach(function(element){
-            if(element == start){picked = true;}
-        }) 
-    } while(picked);
-    
-    return start;
-}
 
 </script>
 
