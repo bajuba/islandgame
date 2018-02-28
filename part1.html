@@ -44,7 +44,7 @@ var islandMap;
 var layer1;
 var platforms;
 var player;
-var phase1Time = 2; //number of seconds to build island
+var phase1Time = 50; //number of seconds to build island
 var cursors;
 var click = false;
 var lavaFlows = [];
@@ -99,13 +99,15 @@ function preload() {
     game.load.image('beachUpRightDown', 'assets/32/beachUpRightDown.png');
     game.load.image('beachRightDownLeft', 'assets/32/beachRightDownLeft.png');
     game.load.image('coconut','assets/32/coconut.png');
-    game.load.image('trash','assets/32/coconut.png');
+    game.load.image('trash','assets/32/trash.png');
     game.load.image('windLeft','assets/32/windLeft.png');
     game.load.image('windUp','assets/32/windUp.png');
     game.load.image('windRight','assets/32/windRight.png');
     game.load.image('windDown','assets/32/windDown.png');
     game.load.image('windButton','assets/32/windButton.png');
     game.load.spritesheet('wind','assets/32/wind.png',32,32);
+    game.load.image('tree','assets/32/palmtree.png');
+    game.load.image('trashPile','assets/32/trashpile.png');
 }
 
 
@@ -685,9 +687,12 @@ function windBuild(){
 }
     
 function windUse(){
+    var i = 0;
     windArray.forEach(function(element){
-        console.log("Destroying " + element.index);
+        
+        console.log("Destroying " + element.index + " "+ i);
         element.destroy();
+        i++;
     })
     windArray = [];
     windIndex = 0;
@@ -713,12 +718,22 @@ function windClick(){
         windButton.x -= scale;
         windButton.y -= scale;
     }
-    
-    
-    
+    printMap();
     phase2Text();
 }
 
+function printMap(){
+     var x=0;
+    var y=0;
+    var map = ""
+    for(i=0;i<=900;i++){
+        map += mapArray[x][y] + " ";
+        x++;
+        if (x == 30){x=0;y++;map += "\n"}
+        
+    }
+    console.log(map);
+}
 function createWind(){
     var rand = game.rnd.integerInRange(1,3);
    /* for(i=0; i<rand; i++){
@@ -730,10 +745,9 @@ function createWind(){
         console.log("Creating " + windArray[windIndex].index);
         windIndex++;
     }
-    rand = game.rnd.integerInRange(6,12);
+    rand = game.rnd.integerInRange(12,20);
     for(i=0;i<rand;i++){
         debrisArray[debrisIndex] = new Debris(debrisIndex,game);
-        debrisArray[debrisIndex].move();
         debrisIndex++;
     }
 }
@@ -754,8 +768,8 @@ Wind = function (index, game){
     this.noClick = false;
     this.tween;
     
-    this.x = game.rnd.integerInRange(2,28); //28
-    this.y = game.rnd.integerInRange(2,28);
+    this.x = game.rnd.integerInRange(0,29);
+    this.y = game.rnd.integerInRange(0,29);
     this.checkTile = function(){
         if (mapArray[this.x][this.y] == 0){
             mapArray[this.x][this.y] = 4; 
@@ -777,13 +791,14 @@ Wind = function (index, game){
     this.wind.events.onInputDown.add(clickWind,this);
     
     this.destroy = function(){
-        //console.log(this.index);
+        console.log(this.onIsland);
         if (!this.onIsland){
             mapArray[this.x][this.y] = 0;
-            
+            console.log("write map, wind not on island at x:" +this.x + " y: " +this.y);
         }
         this.wind.destroy()
-        windArray.splice(this.index,1);
+        
+        delete windArray[this.index];
     }
     this.update = function(){
         if (this.direction == 1){this.wind.animations.play('left');}
@@ -801,9 +816,12 @@ Wind = function (index, game){
                 this.noClick = true;
                 this.tween = game.add.tween(this.wind).to({x: (this.x -1)*SCALE},this.speed, Phaser.Easing.Linear.None, true);
                 this.tween.onComplete.add(this.moved, this);
-                if (!this.onIsland){mapArray[this.x][this.y] == 0}
+                if (!this.onIsland){mapArray[this.x][this.y] = 0;}
                 this.x -= 1;
                 this.checkTile();
+                printMap();
+                console.log("wind moving now at x:" +this.x + " y: " +this.y);
+                
             }else if(this.x <1 && this.direction == 1){
                 this.destroy();
             }
@@ -811,9 +829,11 @@ Wind = function (index, game){
                 this.noClick = true;
                 this.tween = game.add.tween(this.wind).to({y: (this.y -1)*SCALE},this.speed, Phaser.Easing.Linear.None, true);
                 this.tween.onComplete.add(this.moved, this);
-                if (!this.onIsland){mapArray[this.x][this.y] == 0}
+                if (!this.onIsland){mapArray[this.x][this.y] = 0;}
                 this.y -= 1;
                 this.checkTile();
+                printMap();
+                console.log("wind moving now at x:" +this.x + " y: " +this.y);
             }else if(this.y <1 && this.direction ==2){
                 this.destroy();
             }
@@ -821,9 +841,11 @@ Wind = function (index, game){
                 this.noClick = true;
                 this.tween = game.add.tween(this.wind).to({x: (this.x +1)*SCALE},this.speed, Phaser.Easing.Linear.None, true);
                 this.tween.onComplete.add(this.moved, this);
-                if (!this.onIsland){mapArray[this.x][this.y] == 0}
+                if (!this.onIsland){mapArray[this.x][this.y] = 0;}
                 this.x += 1;
                 this.checkTile();
+                printMap();
+                console.log("wind moving now at x:" +this.x + " y: " +this.y);
             }else if(this.x >28 && this.direction == 3){
                 this.destroy();
             }
@@ -831,9 +853,11 @@ Wind = function (index, game){
                 this.noClick = true;
                 this.tween = game.add.tween(this.wind).to({y: (this.y +1)*SCALE},this.speed, Phaser.Easing.Linear.None, true);
                 this.tween.onComplete.add(this.moved, this);
-                if (!this.onIsland){mapArray[this.x][this.y] == 0}
+                if (!this.onIsland){mapArray[this.x][this.y] = 0;}
                 this.y += 1;
                 this.checkTile();
+                printMap();
+                console.log("wind moving now at x:" +this.x + " y: " +this.y);
             }else if(this.y >28 && this.direction == 4){
                 this.destroy();
             }
@@ -888,18 +912,20 @@ Debris = function (index, game){
         this.direction = game.rnd.integerInRange(1,4);
         if(this.direction == 4){this.direction = 2;}
     }
-    if (game.rnd.integerInRange(1,100) <=50){
+    this.debris = game.add.sprite(this.x*SCALE,this.y*SCALE,'coconut');
+    this.type = 'coconut';
+    /*if (game.rnd.integerInRange(1,100) <=50){
         this.debris = game.add.sprite(this.x*SCALE,this.y*SCALE,'coconut');
         this.type = 'coconut';
     }else{this.debris = game.add.sprite(this.x*SCALE,this.y*SCALE,'trash');
-        this.type = 'trash';}
+        this.type = 'trash';}*/
     //this.timer = game.time.create(false);
     //this.timer.loop(this.speed +500, function() {this.moved();}, this);
     //this.timer.start();
     
     this.update = function(){
         if (this.canMove){
-            //this.move();
+            this.move();
             
         }
         
@@ -925,12 +951,14 @@ Debris = function (index, game){
             this.speed = speed;
             this.direction = direction;
         }else if(mapArray[x][y] == 1 || mapArray[x][y] == 5){// hit land
-            plantTree(x,y, this.type);
+            this.plantTree(x,y, this.type,this);
+            this.destroy();
+        }else if(mapArray[x][y] == 2 || mapArray[x][y] == 3 || mapArray[x][y] == 6){
             this.destroy();
         }
         
         this.canMove = true;
-        this.move();
+        
     }
     this.move = function(){
         this.canMove = false;
@@ -974,41 +1002,51 @@ Debris = function (index, game){
     }
     this.destroy = function(){
         this.debris.destroy();
-        debrisArray.splice(this.index,1);
+        delete debrisArray[this.index];
+        this.canMove = false;
     }
-    
+    this.plantTree = function(){
+        if (mapArray[this.x][this.y] == 1){//plant tree here
+        if (this.type == 'coconut'){
+            mapArray[this.x][this.y] = 5;
+            treeArray[treeIndex] = game.add.sprite(this.x*SCALE,this.y*SCALE, 'tree');
+            treeIndex ++;
+            this.destroy();
+        }else if (this.type == 'trash'){
+            mapArray[this.x][this.y] = 6;
+            trashArray[trashIndex] = game.add.sprite(this.x*SCALE,this.y*SCALE, 'trashPile');
+            trashIndex ++;
+            this.destroy();
+        }
+        }else if(mapArray[this.x][this.y] == 5 && this.type == 'coconut'){//plant tree in an adjacent square
+            console.log("hit tree");
+            if(mapArray[this.x-1][this.y] == 1){//plant tree on left tile
+                mapArray[this.x-1][this.y] = 5;
+                treeArray[treeIndex] = game.add.sprite((this.x-1)*SCALE,this.y*SCALE);
+                treeIndex ++;
+                console.log("plant tree left");
+            }else if(mapArray[this.x][this.y-1] == 1){//plant tree above
+                mapArray[this.x][this.y-1] = 5;
+                treeArray[treeIndex] = game.add.sprite(this.x*SCALE,(this.y-1)*SCALE);
+                treeIndex ++;
+                console.log("plant tree up");
+            }else if(mapArray[this.x+1][this.y] == 1){//plant tree on right tile
+                mapArray[this.x+1][this.y] = 5;
+                treeArray[treeIndex] = game.add.sprite((this.x+1)*SCALE,this.y*SCALE);
+                treeIndex ++;
+                console.log("plant tree right");
+            }else if(mapArray[this.x][this.y+1] == 1){//plant tree below
+                mapArray[this.x][this.y+1] = 5;
+                treeArray[treeIndex] = game.add.sprite(this.x*SCALE,(this.y+1)*SCALE);
+                treeIndex ++;
+                console.log("plant tree down");
+            }
+        this.destroy();
+        }
+    }
 }
 
-function plantTree(x,y,type){
-    if (mapArray[x][y] == 1){//plant tree here
-        if (type == 'coconut'){
-            mapArray[x][y] == 5;
-            treeArray[treeIndex] = game.add.sprite(x*SCALE,y*SCALE, 'tree');
-            treeIndex ++;
-        }else if (type == 'trash'){
-            mapArray[x][y] == 6;
-            trashArray[trashIndex] = game.add.sprite(x*SCALE,y*SCALE, 'trashPile');
-            trashIndex ++;
-        }
-    }else if(mapArray[x][y] == 5){//plant tree in an adjacent square
-        if(mapArray[x-1][y] == 1){//plant tree on left tile
-            mapArray[x-1][y] == 5;
-            treeArray[treeIndex] = game.add.sprite((x-1)*SCALE,y*SCALE);
-            treeIndex ++;
-        }else if(mapArray[x][y-1] == 1){//plant tree above
-            mapArray[x][y-1] == 5;
-            treeArray[treeIndex] = game.add.sprite(x*SCALE,(y-1)*SCALE);
-            treeIndex ++;
-        }else if(mapArray[x+1][y] == 1){//plant tree on right tile
-            mapArray[x+1][y] == 5;
-            treeArray[treeIndex] = game.add.sprite((x+1)*SCALE,y*SCALE);
-            treeIndex ++;
-        }else if(mapArray[x][y+1] == 1){//plant tree below
-            mapArray[x][y+1] == 5;
-            treeArray[treeIndex] = game.add.sprite(x*SCALE,(y+1)*SCALE);
-            treeIndex ++;
-        }
-    }
+function plantTree(x,y,type,obj){
 }
     /////////////////////////////////
 //////////////END PHASE 2 LOGIC////////////
