@@ -44,7 +44,7 @@ var islandMap;
 var layer1;
 var platforms;
 var player;
-var phase1Time = 50; //number of seconds to build island
+var phase1Time = 75; //number of seconds to build island
 var cursors;
 var click = false;
 var lavaFlows = [];
@@ -725,8 +725,9 @@ function windClick(){
 function printMap(){
      var x=0;
     var y=0;
-    var map = ""
+    var map = "XX000102030405060708091011121314151617181920212223242526272829\n";
     for(i=0;i<=900;i++){
+        if (x == 0){if (y < 10){map+= "0";}map += y + " ";}
         map += mapArray[x][y] + " ";
         x++;
         if (x == 30){x=0;y++;map += "\n"}
@@ -740,12 +741,12 @@ function createWind(){
         windArray[windIndex] = new Wind(windIndex,game);
         windIndex++;
     }*/
-    for(i=0; i<windCount/3; i++){
+    for(i=0; i<windCount/2; i++){
         windArray[windIndex] = new Wind(windIndex,game);
         console.log("Creating " + windArray[windIndex].index);
         windIndex++;
     }
-    rand = game.rnd.integerInRange(12,20);
+    rand = game.rnd.integerInRange(6,12);
     for(i=0;i<rand;i++){
         debrisArray[debrisIndex] = new Debris(debrisIndex,game);
         debrisIndex++;
@@ -763,18 +764,25 @@ Wind = function (index, game){
     
     this.index = index;
     this.game = game;
+    
     this.speed = game.rnd.integerInRange(100,200);
     this.onIsland = false;
     this.noClick = false;
     this.tween;
-    
+    this.gone = false;
+    var stacked;
+    do{
+    stacked = false;
     this.x = game.rnd.integerInRange(0,29);
     this.y = game.rnd.integerInRange(0,29);
+        if (mapArray[this.x][this.y] == 4){stacked = true;}
+    }while(stacked)
     this.checkTile = function(){
-        if (mapArray[this.x][this.y] == 0){
+        if (!this.gone){
+            this.previous = mapArray[this.x][this.y];
             mapArray[this.x][this.y] = 4; 
-            this.onIsland = false;
-        }else{this.onIsland=true;}
+            //this.onIsland = false;
+        }//else{this.onIsland=true;}
     }
     this.checkTile();
     this.direction = game.rnd.integerInRange(1,4);
@@ -791,11 +799,13 @@ Wind = function (index, game){
     this.wind.events.onInputDown.add(clickWind,this);
     
     this.destroy = function(){
+        this.gone = true;
         console.log(this.onIsland);
-        if (!this.onIsland){
-            mapArray[this.x][this.y] = 0;
+        mapArray[this.x][this.y] = this.previous;
+        //if (!this.onIsland){
+            //mapArray[this.x][this.y] = 0;
             console.log("write map, wind not on island at x:" +this.x + " y: " +this.y);
-        }
+        //}
         this.wind.destroy()
         
         delete windArray[this.index];
@@ -805,63 +815,86 @@ Wind = function (index, game){
         if (this.direction == 2){this.wind.animations.play('up');}
         if (this.direction == 3){this.wind.animations.play('right');}
         if (this.direction == 4){this.wind.animations.play('down');}
-        this.move();
+        if (game.rnd.integerInRange(1,1000) <= 5 && !this.gone){
+            this.move();
+        }
     }
     this.moved = function(){
+        console.log("wind before move x:" +this.x + " y: " +this.y + " map: " + mapArray[this.x][this.y]);
+        mapArray[this.x][this.y] = this.previous;
+        var debugLast = 0;
+        var x = true;
+        //if (!this.onIsland){mapArray[this.x][this.y] = 0;}
+        if (this.direction == 1){this.x -= 1;debugLast = +1;x = true;}
+        else if (this.direction == 2){this.y -= 1;debugLast = +1;x = false;}
+        else if (this.direction == 3){this.x += 1;debugLast = -1;x = true;}
+        else if (this.direction == 4){this.y += 1;debugLast = -1;x = false;}
+        //this.previous = mapArray[this.x][this.y];
+        //if(mapArray[this.x][this.y] == 4){this.move();console.log("winds collide");}
+        
+        console.log("wind after move x:" +this.x + " y: " +this.y + " map: " + mapArray[this.x][this.y]);
+        if (x){
+            console.log("map at wind last location x:" +(this.x + debugLast)+ " y: " +this.y + " map: " + mapArray[this.x+debugLast][this.y]);
+            //mapArray[this.x][this.y] = this.previous;
+        }else{
+            console.log("map at wind last location x:" +this.x + " y: " +(this.y + debugLast)+ " map: " + mapArray[this.x][this.y+debugLast]);
+            //mapArray[this.x][this.y+debugLast] = this.previous;
+        }
+        this.checkTile();
         this.noClick = false;
     }
     this.move = function(){
-        if (game.rnd.integerInRange(1,1000) <= 1){
-            if (this.direction == 1 && this.x >= 1){
+            if (this.direction == 1 && this.x >= 1 && mapArray[this.x-1][this.y] != 4){
+                //this.previous = mapArray[this.x-1][this.y];
                 this.noClick = true;
                 this.tween = game.add.tween(this.wind).to({x: (this.x -1)*SCALE},this.speed, Phaser.Easing.Linear.None, true);
                 this.tween.onComplete.add(this.moved, this);
-                if (!this.onIsland){mapArray[this.x][this.y] = 0;}
-                this.x -= 1;
-                this.checkTile();
+                
                 printMap();
-                console.log("wind moving now at x:" +this.x + " y: " +this.y);
+                
                 
             }else if(this.x <1 && this.direction == 1){
                 this.destroy();
             }
-            else if (this.direction == 2 && this.y >= 1){
+            else if (this.direction == 2 && this.y >= 1 && mapArray[this.x][this.y-1] != 4){
+                //this.previous = mapArray[this.x][this.y-1];
                 this.noClick = true;
                 this.tween = game.add.tween(this.wind).to({y: (this.y -1)*SCALE},this.speed, Phaser.Easing.Linear.None, true);
                 this.tween.onComplete.add(this.moved, this);
-                if (!this.onIsland){mapArray[this.x][this.y] = 0;}
+                /*if (!this.onIsland){mapArray[this.x][this.y] = 0;}
                 this.y -= 1;
-                this.checkTile();
+                this.checkTile();*/
                 printMap();
                 console.log("wind moving now at x:" +this.x + " y: " +this.y);
             }else if(this.y <1 && this.direction ==2){
                 this.destroy();
             }
-            else if (this.direction == 3 && this.x <= 28){
+            else if (this.direction == 3 && this.x <= 28 && mapArray[this.x+1][this.y] != 4){
+                //this.previous = mapArray[this.x+1][this.y];
                 this.noClick = true;
                 this.tween = game.add.tween(this.wind).to({x: (this.x +1)*SCALE},this.speed, Phaser.Easing.Linear.None, true);
                 this.tween.onComplete.add(this.moved, this);
-                if (!this.onIsland){mapArray[this.x][this.y] = 0;}
+               /* if (!this.onIsland){mapArray[this.x][this.y] = 0;}
                 this.x += 1;
-                this.checkTile();
+                this.checkTile();*/
                 printMap();
                 console.log("wind moving now at x:" +this.x + " y: " +this.y);
             }else if(this.x >28 && this.direction == 3){
                 this.destroy();
             }
-            else if (this.direction == 4 && this.y <= 28){
+            else if (this.direction == 4 && this.y <= 28 && mapArray[this.x][this.y+1] != 4){
+                //this.previous = mapArray[this.x][this.y +1];
                 this.noClick = true;
                 this.tween = game.add.tween(this.wind).to({y: (this.y +1)*SCALE},this.speed, Phaser.Easing.Linear.None, true);
                 this.tween.onComplete.add(this.moved, this);
-                if (!this.onIsland){mapArray[this.x][this.y] = 0;}
+                /*if (!this.onIsland){mapArray[this.x][this.y] = 0;}
                 this.y += 1;
-                this.checkTile();
+                this.checkTile();*/
                 printMap();
                 console.log("wind moving now at x:" +this.x + " y: " +this.y);
             }else if(this.y >28 && this.direction == 4){
                 this.destroy();
             }
-        }
     }
     
     this.getDirection = function(){
@@ -887,7 +920,7 @@ Debris = function (index, game){
     this.onIsland = false;
     this.tween;
     this.direction = 0;
-    this.canMove = true;
+    this.canMove = false;
     this.timer;
     this.type = '';
     var side = game.rnd.integerInRange(1,4);//pick a side from which to spawn
@@ -895,34 +928,42 @@ Debris = function (index, game){
         this.x = 0;
         this.y = game.rnd.integerInRange(0,29);
         this.direction = game.rnd.integerInRange(1,4);
+        console.log(this.index + " before reassign debris dir: " + this.direction);
         if(this.direction == 1){this.direction = 3;}
+        console.log(this.index + " after reassign debris dir: " + this.direction);
     }else if (side == 2){//Top
         this.x = game.rnd.integerInRange(0,29);
         this.y = 0;
         this.direction = game.rnd.integerInRange(1,4);
+        console.log(this.index + " before reassign debris dir: " + this.direction);
         if(this.direction == 2){this.direction = 4;}
+        console.log(this.index + " after reassign debris dir: " + this.direction);
     }else if (side == 3){//Right
         this.x = 29;
         this.y = game.rnd.integerInRange(0,29);
         this.direction = game.rnd.integerInRange(1,4);
+        console.log(this.index + " before reassign debris dir: " + this.direction);
         if(this.direction == 3){this.direction = 4;}
+        console.log(this.index + " after reassign debris dir: " + this.direction);
     }else if (side == 4){//Bottom
         this.x = game.rnd.integerInRange(0,29);
         this.y = 29;
         this.direction = game.rnd.integerInRange(1,4);
+        console.log(this.index + " before reassign debris dir: " + this.direction);
         if(this.direction == 4){this.direction = 2;}
+        console.log(this.index + " after reassign debris dir: " + this.direction);
     }
-    this.debris = game.add.sprite(this.x*SCALE,this.y*SCALE,'coconut');
-    this.type = 'coconut';
-    /*if (game.rnd.integerInRange(1,100) <=50){
+    //this.debris = game.add.sprite(this.x*SCALE,this.y*SCALE,'coconut');
+    //this.type = 'coconut';
+    if (game.rnd.integerInRange(1,100) <=50){
         this.debris = game.add.sprite(this.x*SCALE,this.y*SCALE,'coconut');
         this.type = 'coconut';
     }else{this.debris = game.add.sprite(this.x*SCALE,this.y*SCALE,'trash');
-        this.type = 'trash';}*/
+        this.type = 'trash';}
     //this.timer = game.time.create(false);
     //this.timer.loop(this.speed +500, function() {this.moved();}, this);
     //this.timer.start();
-    
+    this.canMove = true;
     this.update = function(){
         if (this.canMove){
             this.move();
@@ -937,11 +978,12 @@ Debris = function (index, game){
         var y = this.y;
         var speed = this.speed;
         var direction = this.direction;
+        
         if (mapArray[x][y] == 4){ //hit Wind
             console.log("hit wind")
             windArray.forEach(function(element){
                 console.log("debris x: " + x + " debris y: " + y + " wind x: " + element.x + " wind y: " + element.y);
-                if(element.x == x && y == y){
+                if(element.x == x && element.y == y){
                     console.log("found the wind in array")
                     speed -= element.speed;
                     direction = element.direction;
@@ -991,7 +1033,7 @@ Debris = function (index, game){
         else if(this.direction == 4 && this.y <= 28){//down
             this.tween = game.add.tween(this.debris).to({y: (this.y + 1)*SCALE},this.speed, Phaser.Easing.Linear.None, true);
             this.tween.onComplete.add(this.moved,this);
-            this.y--;
+            this.y++;
             //console.log("move down");
         }else if(this.y >28 && this.direction == 4){
             this.destroy();
@@ -1007,37 +1049,37 @@ Debris = function (index, game){
     }
     this.plantTree = function(){
         if (mapArray[this.x][this.y] == 1){//plant tree here
-        if (this.type == 'coconut'){
-            mapArray[this.x][this.y] = 5;
-            treeArray[treeIndex] = game.add.sprite(this.x*SCALE,this.y*SCALE, 'tree');
-            treeIndex ++;
-            this.destroy();
-        }else if (this.type == 'trash'){
-            mapArray[this.x][this.y] = 6;
-            trashArray[trashIndex] = game.add.sprite(this.x*SCALE,this.y*SCALE, 'trashPile');
-            trashIndex ++;
-            this.destroy();
-        }
+            if (this.type == 'coconut'){
+                mapArray[this.x][this.y] = 5;
+                treeArray[treeIndex] = game.add.sprite(this.x*SCALE,this.y*SCALE, 'tree');
+                treeIndex ++;
+                this.destroy();
+            }else if (this.type == 'trash'){
+                mapArray[this.x][this.y] = 6;
+                trashArray[trashIndex] = game.add.sprite(this.x*SCALE,this.y*SCALE, 'trashPile');
+                trashIndex ++;
+                this.destroy();
+            }
         }else if(mapArray[this.x][this.y] == 5 && this.type == 'coconut'){//plant tree in an adjacent square
             console.log("hit tree");
             if(mapArray[this.x-1][this.y] == 1){//plant tree on left tile
                 mapArray[this.x-1][this.y] = 5;
-                treeArray[treeIndex] = game.add.sprite((this.x-1)*SCALE,this.y*SCALE);
+                treeArray[treeIndex] = game.add.sprite((this.x-1)*SCALE,this.y*SCALE,'tree');
                 treeIndex ++;
                 console.log("plant tree left");
             }else if(mapArray[this.x][this.y-1] == 1){//plant tree above
                 mapArray[this.x][this.y-1] = 5;
-                treeArray[treeIndex] = game.add.sprite(this.x*SCALE,(this.y-1)*SCALE);
+                treeArray[treeIndex] = game.add.sprite(this.x*SCALE,(this.y-1)*SCALE,'tree');
                 treeIndex ++;
                 console.log("plant tree up");
             }else if(mapArray[this.x+1][this.y] == 1){//plant tree on right tile
                 mapArray[this.x+1][this.y] = 5;
-                treeArray[treeIndex] = game.add.sprite((this.x+1)*SCALE,this.y*SCALE);
+                treeArray[treeIndex] = game.add.sprite((this.x+1)*SCALE,this.y*SCALE,'tree');
                 treeIndex ++;
                 console.log("plant tree right");
             }else if(mapArray[this.x][this.y+1] == 1){//plant tree below
                 mapArray[this.x][this.y+1] = 5;
-                treeArray[treeIndex] = game.add.sprite(this.x*SCALE,(this.y+1)*SCALE);
+                treeArray[treeIndex] = game.add.sprite(this.x*SCALE,(this.y+1)*SCALE,'tree');
                 treeIndex ++;
                 console.log("plant tree down");
             }
